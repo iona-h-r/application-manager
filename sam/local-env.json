@@ -1,0 +1,36 @@
+{
+  "SubmitFunction": {
+    "APPLICATIONS_TABLE_NAME": "applications",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true",
+    "SES_ENABLED": "true",
+    "SES_FROM_ADDRESS": "mkylzpu123@gmail.com",
+    "SES_ADMIN_ADDRESS": "mkylzpu123@gmail.com",
+    "DOMAIN_NAME": "http://localhost:5173"
+  },
+  "AdminListFunction": {
+    "APPLICATIONS_TABLE_NAME": "applications",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true"
+  },
+  "AdminDetailFunction": {
+    "APPLICATIONS_TABLE_NAME": "applications",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true"
+  },
+  "AdminCreateJobFunction":{
+    "ADMIN_JOBS_TABLE_NAME": "admin-jobs",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true"
+  },
+  "AdminListMyJobsFunction":{
+    "ADMIN_JOBS_TABLE_NAME": "admin-jobs",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true"
+  },
+  "PublicListJobsFunction":{
+    "ADMIN_JOBS_TABLE_NAME": "admin-jobs",
+    "DYNAMO_ENDPOINT": "http://host.docker.internal:8000",
+    "SKIP_AUTH": "true"
+  }
+}

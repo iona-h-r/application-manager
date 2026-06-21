@@ -1,0 +1,58 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - prd
+    paths:
+      - terraform/**
+      - backend/src/**
+      - .github/workflows/terraform.yml
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+  TF_VAR_aws_region: ap-northeast-1
+  TF_VAR_app_name: application-manager
+  TF_VAR_environment: prod
+  TF_VAR_ses_from_address: ${{ secrets.SES_FROM_ADDRESS }}
+  TF_VAR_ses_admin_address: ${{ secrets.SES_ADMIN_ADDRESS }}
+  TF_VAR_frontend_domain_name: ${{ secrets.FRONTEND_DOMAIN_NAME }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
