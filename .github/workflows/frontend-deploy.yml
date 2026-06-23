@@ -29,6 +29,7 @@ env:
 jobs:
   deploy:
     if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    environment: prd
     runs-on: ubuntu-latest
 
     steps:
