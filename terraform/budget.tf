@@ -58,11 +58,11 @@ resource "aws_lambda_function" "emergency_shutdown" {
   environment {
     variables = {
       CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.frontend.id
-      API_GW_API_ID               = aws_apigatewayv2_api.main.id
-      API_GW_STAGE_NAME           = "$default"
-      COGNITO_USER_POOL_ID        = aws_cognito_user_pool.pool.id
-      SES_FROM_ADDRESS            = aws_ses_email_identity.sender.email
-      SES_ADMIN_ADDRESS           = var.ses_admin_address
+      API_GW_API_ID              = aws_apigatewayv2_api.main.id
+      API_GW_STAGE_NAME          = "$default"
+      COGNITO_USER_POOL_ID       = aws_cognito_user_pool.pool.id
+      SES_FROM_ADDRESS           = aws_ses_email_identity.sender.email
+      SES_ADMIN_ADDRESS          = var.ses_admin_address
     }
   }
 
@@ -97,11 +97,11 @@ resource "aws_budgets_budget" "monthly" {
 
   # $1 に達した瞬間（ACTUAL = 実績コスト 100%）に SNS へ通知
   notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 100
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
-    subscriber_sns_topic_arns  = [aws_sns_topic.emergency_stop.arn]
+    comparison_operator       = "GREATER_THAN"
+    threshold                 = 100
+    threshold_type            = "PERCENTAGE"
+    notification_type         = "ACTUAL"
+    subscriber_sns_topic_arns = [aws_sns_topic.emergency_stop.arn]
   }
 
   depends_on = [aws_sns_topic_policy.emergency_stop]
