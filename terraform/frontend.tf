@@ -98,7 +98,29 @@ resource "aws_s3_bucket_policy" "frontend" {
             "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
           }
         }
-      }
+      },
+      {
+        Sid    = "AllowGitHubActionsDeployRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = var.github_actions_role_arn
+        }
+        Action = [
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:GetObject",
+        ]
+        Resource = "${aws_s3_bucket.frontend.arn}/*"
+      },
+      {
+        Sid    = "AllowGitHubActionsDeployRoleList"
+        Effect = "Allow"
+        Principal = {
+          AWS = var.github_actions_role_arn
+        }
+        Action   = "s3:ListBucket"
+        Resource = aws_s3_bucket.frontend.arn
+      },
     ]
   })
 }
