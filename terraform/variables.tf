@@ -37,3 +37,8 @@ variable "tags" {
   default     = {}
   description = "Common tags applied to resources."
 }
+
+variable "github_actions_role_arn" {
+  type        = string
+  description = "IAM Role ARN assumed by GitHub Actions (OIDC). Granted deploy access to the frontend S3 bucket."
+}

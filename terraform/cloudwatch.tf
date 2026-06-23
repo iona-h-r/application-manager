@@ -15,7 +15,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_requests" {
   namespace           = "AWS/CloudFront"
   period              = 60
   statistic           = "Sum"
-  treat_missing_data   = "notBreaching"
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     DistributionId = aws_cloudfront_distribution.frontend.id
@@ -37,7 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "api_gateway_count" {
   namespace           = "AWS/ApiGateway"
   period              = 60
   statistic           = "Sum"
-  treat_missing_data   = "notBreaching"
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     ApiId = aws_apigatewayv2_api.main.id
