@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Application Manager - Local Dev
+
+Parameters:
+  TableName:
+    Type: String
+    Default: application-manager-local
+  AdminJobsTableName:
+    Type: String
+    Default: admin-jobs
+  DynamoEndpoint:
+    Type: String
+    Default: http://host.docker.internal:8000
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    CodeUri: ../backend/src/
+    Environment:
+      Variables:
+        APPLICATIONS_TABLE_NAME: !Ref TableName
+        ADMIN_JOBS_TABLE_NAME: !Ref AdminJobsTableName
+        DYNAMO_ENDPOINT: !Ref DynamoEndpoint
+        SKIP_AUTH: "true"
+        SES_ENABLED: "false"
+        SES_FROM_ADDRESS: ""
+        SES_ADMIN_ADDRESS: ""
+        DOMAIN_NAME: "http://localhost:5173"
+
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  SubmitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.applications.create_application.handler
+      Events:
+        SubmitApi:
+          Type: Api
+          Properties:
+            Path: /applications
+            Method: post
+            RestApiId: !Ref MyApi
+
+  AdminListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.admin.list_applications.handler
+      Events:
+        AdminListApi:
+          Type: Api
+          Properties:
+            Path: /admin/applications
+            Method: get
+            RestApiId: !Ref MyApi
+
+  AdminDetailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.admin.get_application_detail.handler
+      Events:
+        AdminDetailApi:
+          Type: Api
+          Properties:
+            Path: /admin/applications/{applicationId}
+            Method: get
+            RestApiId: !Ref MyApi
+
+  AdminCreateJobFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.admin.create_job.handler
+      Events:
+        AdminCreateJobApi:
+          Type: Api
+          Properties:
+            Path: /admin/jobs
+            Method: post
+            RestApiId: !Ref MyApi
+
+  AdminListMyJobsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.admin.list_my_jobs.handler
+      Events:
+        AdminListMyJobsApi:
+          Type: Api
+          Properties:
+            Path: /admin/jobs
+            Method: get
+            RestApiId: !Ref MyApi
+
+  PublicListJobsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.jobs.list_jobs.handler
+      Events:
+        PublicListJobsApi:
+          Type: Api
+          Properties:
+            Path: /jobs
+            Method: get
+            RestApiId: !Ref MyApi
