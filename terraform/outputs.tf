@@ -29,3 +29,18 @@ output "cloudfront_distribution_id" {
 output "frontend_bucket_name" {
   value = aws_s3_bucket.frontend.bucket
 }
+
+output "budget_alert_sns_topic_arn" {
+  description = "SNS topic ARN for emergency alerts"
+  value       = aws_sns_topic.emergency_stop.arn
+}
+
+output "emergency_stop_sns_topic_arn" {
+  description = "SNS topic ARN for emergency alerts"
+  value       = aws_sns_topic.emergency_stop.arn
+}
+
+output "emergency_shutdown_lambda_name" {
+  description = "Emergency shutdown Lambda function name"
+  value       = aws_lambda_function.emergency_shutdown.function_name
+}

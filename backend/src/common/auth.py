@@ -2,14 +2,23 @@ import json
 import os
 import urllib.request
 
-import jwt
-
 
 COGNITO_REGION = os.environ.get('COGNITO_REGION', os.environ.get('AWS_REGION', 'ap-northeast-1'))
 COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
 COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
 
 _JWKS_CACHE = None
+
+
+def _get_jwt_module():
+    try:
+        import jwt
+        return jwt
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "PyJWT is required for token verification but is not installed. "
+            "Add 'PyJWT[crypto]' to requirements.txt and rebuild."
+        ) from exc
 
 
 def get_claims(event):
@@ -71,6 +80,7 @@ def _get_jwks():
 
 
 def _find_key(kid):
+    jwt = _get_jwt_module()
     jwks = _get_jwks()
     for key in jwks.get('keys', []):
         if key.get('kid') == kid:
@@ -92,6 +102,7 @@ def extract_bearer_token(event):
 
 
 def verify_cognito_id_token(token):
+    jwt = _get_jwt_module()
     if not token:
         raise PermissionError('Missing bearer token')
     if not COGNITO_USER_POOL_ID:
@@ -125,7 +136,7 @@ def require_auth(event, required_group=None):
     claims = verify_cognito_id_token(token)
 
     if required_group:
-        groups = claims.get('cognito:groups', [])
+        groups = get_groups(claims)
         if required_group not in groups:
             raise PermissionError(f'Requires group: {required_group}')
 
