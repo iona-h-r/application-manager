@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Apply from './pages/Apply'
 import Admin from './pages/Admin'
 import Home from './pages/Home'
+import Confirm from './pages/Confirm'   // 追加
 import ApplicationDetail from './pages/ApplicationDetail'
 import AdminJobCreate from './pages/AdminJobCreate'
 import AdminJobList from './pages/AdminJobList'
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Home />}  />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/confirm" element={<Confirm />} />
         <Route
           path="/admin/applications/:applicationId"
           element={

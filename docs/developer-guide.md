@@ -98,6 +98,44 @@ curl -s http://127.0.0.1:3002/admin/applications | jq
 # 管理者詳細
 curl -s http://127.0.0.1:3002/admin/applications/<APPLICATION_ID> | jq
 ```
+
+---
+
+## テストデータ投入
+
+ページネーション確認や、管理者目線・ユーザー目線の表示確認には
+[scripts/seed_test_data.py](scripts/seed_test_data.py) を使用します。
+
+このスクリプトは以下を作成します。
+
+* 管理者目線データ: 自分の求人 + 他管理者の求人
+* ユーザー目線データ: 自分の応募 + 他ユーザーの応募
+
+デフォルトではそれぞれ 25 件ずつ作成されます。
+
+```bash
+# デフォルト投入（自分25件/他人25件）
+python scripts/seed_test_data.py --my-user-id local-user-001
+
+# 管理者IDを分ける場合
+python scripts/seed_test_data.py --my-user-id local-user-001 --my-admin-id local-admin
+
+# 件数を明示指定する場合
+python scripts/seed_test_data.py \
+    --my-user-id local-user-001 \
+    --my-job-count 25 \
+    --other-job-count 25 \
+    --my-application-count 25 \
+    --other-application-count 25
+```
+
+主なオプション:
+
+* `--my-user-id` (必須): 自分の応募者ID
+* `--my-admin-id` (任意): 自分の管理者ID（未指定時は `--my-user-id` と同じ）
+* `--endpoint-url` (任意): DynamoDB エンドポイント（既定: `http://localhost:8000`）
+* `--admin-jobs-table` / `--applications-table` (任意): テーブル名の上書き
+
 ---
 
 ## 本番デプロイ (Terraform 完結)

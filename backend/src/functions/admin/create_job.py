@@ -6,6 +6,7 @@ Target frontend page:
 
 import json
 import uuid
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 
 from common.auth import get_claims, get_user_sub, is_admin_event
@@ -36,9 +37,9 @@ def _validate(body: dict) -> list[str]:
     budget = body.get("budget")
     if budget is not None:
         try:
-            if float(budget) < 0:
+            if Decimal(str(budget)) < 0:
                 errors.append("'budget' must be >= 0.")
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, InvalidOperation):
             errors.append("'budget' must be a number.")
 
     return errors
@@ -81,8 +82,6 @@ def handler(event, context):
     # 5) DynamoDB へ保存
     item = {
         "id": job_id,
-        "entityType": "JOB",
-        "jobId": job_id,
         "ownerUserId": owner_user_id,
         "createdAt": now,
         "updatedAt": now,
@@ -90,12 +89,14 @@ def handler(event, context):
         "company": body["company"],
         "location": body["location"],
         "employmentType": body["employmentType"],
-        "budget": str(body["budget"]),
+        "budget": Decimal(str(body["budget"])),
         "description": body["description"],
+        "status": "OPEN",
+        "publishedAt": now,
         # 任意項目を透過的に保存
         **{
             k: v for k, v in body.items()
-            if k not in REQUIRED_FIELDS and v is not None
+            if k not in REQUIRED_FIELDS and k not in ["status", "publishedAt", "closedAt"] and v is not None
         },
     }
 
@@ -107,7 +108,6 @@ def handler(event, context):
     except table.meta.client.exceptions.ConditionalCheckFailedException:
         job_id = _generate_job_id()
         item["id"] = job_id
-        item["jobId"] = job_id
         table.put_item(Item=item)
     except Exception as exc:
         print(f"ERROR put_item: {exc}")
@@ -119,6 +119,7 @@ def handler(event, context):
         {
             "message": "Job created successfully.",
             "jobId": job_id,
+            "status": "OPEN",
             "jobTitle": body["jobTitle"],
             "createdAt": now,
         },

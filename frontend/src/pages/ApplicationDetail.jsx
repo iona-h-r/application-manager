@@ -86,18 +86,18 @@ export default function ApplicationDetail() {
             />
 
             <Item
+              label="案件ID"
+              value={application.jobId}
+            />
+
+            <Item
               label="応募者名"
               value={application.applicantName}
             />
 
             <Item
-              label="評価"
-              value={application.rating}
-            />
-
-            <Item
-              label="実績件数"
-              value={application.achievementCount}
+              label="ステータス"
+              value={application.status}
             />
 
             <Item
