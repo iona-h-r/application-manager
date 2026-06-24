@@ -26,12 +26,10 @@ def get_claims(event):
     authorizer = event.get('requestContext', {}).get('authorizer', {})
 
     claims = authorizer.get('claims')
-    print(json.dumps(claims, ensure_ascii=False))
     if isinstance(claims, dict):
         return claims
 
     jwt_claims = authorizer.get('jwt', {}).get('claims', {})
-    print(json.dumps(jwt_claims, ensure_ascii=False))
     if isinstance(jwt_claims, dict):
         return jwt_claims
 
@@ -47,7 +45,27 @@ def get_groups(claims):
     if isinstance(groups_raw, list):
         return [str(g).strip() for g in groups_raw if str(g).strip()]
 
-    return [g.strip() for g in str(groups_raw).split(',') if g.strip()]
+    raw = str(groups_raw).strip()
+    if not raw:
+        return []
+
+    # "[Admin]" や "['Admin']" / '["Admin","Ops"]' のような文字列化配列に対応
+    if raw.startswith('[') and raw.endswith(']'):
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(g).strip() for g in parsed if str(g).strip()]
+        except Exception:
+            inner = raw[1:-1].strip()
+            if not inner:
+                return []
+            return [
+                g.strip().strip("\"'")
+                for g in inner.split(',')
+                if g.strip().strip("\"'")
+            ]
+
+    return [g.strip() for g in raw.split(',') if g.strip()]
 
 
 def has_group(claims, required_group):
@@ -57,7 +75,6 @@ def has_group(claims, required_group):
 
 
 def is_admin_event(event):
-    print(json.dumps(event, ensure_ascii=False))
     if os.environ.get('SKIP_AUTH') == 'true':
         return True
     return has_group(get_claims(event), 'Admin')
@@ -146,8 +163,7 @@ def require_auth(event, required_group=None):
     claims = verify_cognito_id_token(token)
 
     if required_group:
-        groups = get_groups(claims)
-        if required_group not in groups:
+        if not has_group(claims, required_group):
             raise PermissionError(f'Requires group: {required_group}')
 
     return claims
