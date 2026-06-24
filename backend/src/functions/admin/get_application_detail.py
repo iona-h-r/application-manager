@@ -13,14 +13,20 @@ table = get_table_by_env("APPLICATIONS_TABLE_NAME")
 # Fields expected by ApplicationDetail.jsx — filter to only these keys.
 DETAIL_FIELDS = {
     "id",
+    "createdAt",
     "jobTitle",
+    "jobId",
     "applicantUserId",
     "applicantName",
-    "rating",
-    "achievementCount",
+    "status",
     "proposalAmount",
     "proposalContent",
-    "createdAt",
+    "reviewedBy",
+    "reviewedAt",
+    "interviewDate",
+    "interviewMemo",
+    "rejectionReason",
+    "attachmentUrl",
 }
 
 

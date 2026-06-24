@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { createApiClient } from '../lib/api'
 import MainLayout from '../layouts/MainLayout'
 
+const PAGE_SIZE = 10
+
 function normalizeAdminResults(data) {
   if (Array.isArray(data)) {
     return data
@@ -24,32 +26,104 @@ export default function Admin() {
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
+  const [nextToken, setNextToken] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageInput, setPageInput] = useState('1')
+  const [pageStartTokens, setPageStartTokens] = useState({ 1: null })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    handleSearch()
+    loadPage(1)
   }, [])
+
+  const fetchApplications = async (params) => {
+    const api = createApiClient()
+    const res = await api.get('/admin/applications', { params })
+    return {
+      items: normalizeAdminResults(res.data),
+      nextToken: res.data?.nextToken || null,
+    }
+  }
+
+  const loadPage = async (targetPage) => {
+    if (targetPage < 1 || query) {
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const tokens = { ...pageStartTokens }
+      let targetToken = tokens[targetPage]
+
+      if (targetToken === undefined) {
+        let probePage = Math.max(...Object.keys(tokens).map((p) => Number(p)))
+        while (probePage < targetPage) {
+          const startToken = tokens[probePage]
+          const probeRes = await fetchApplications({
+            limit: PAGE_SIZE,
+            nextToken: startToken || undefined,
+          })
+          if (!probeRes.nextToken) {
+            throw new Error(`指定ページ(${targetPage})は存在しません`)
+          }
+          tokens[probePage + 1] = probeRes.nextToken
+          probePage += 1
+        }
+        targetToken = tokens[targetPage]
+      }
+
+      const result = await fetchApplications({
+        limit: PAGE_SIZE,
+        nextToken: targetToken || undefined,
+      })
+      setResults(result.items)
+      setNextToken(result.nextToken)
+      if (result.nextToken) {
+        tokens[targetPage + 1] = result.nextToken
+      }
+      setPageStartTokens(tokens)
+      setCurrentPage(targetPage)
+      setPageInput(String(targetPage))
+    } catch (err) {
+      console.error(err)
+      setResults([])
+      setError(
+        err.response?.data?.message ??
+        err.message ??
+        '検索に失敗しました'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSearch = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const api = createApiClient()
+      if (!query) {
+        setPageStartTokens({ 1: null })
+        setCurrentPage(1)
+        setPageInput('1')
+        const result = await fetchApplications({ limit: PAGE_SIZE })
+        setResults(result.items)
+        setNextToken(result.nextToken)
+        if (result.nextToken) {
+          setPageStartTokens({ 1: null, 2: result.nextToken })
+        }
+        return
+      }
 
-      const res = await api.get(
-        '/admin/applications',
-        query
-          ? {
-              params: {
-                id: query,
-              },
-            }
-          : undefined
-      )
-
-      setResults(normalizeAdminResults(res.data))
+      const result = await fetchApplications({ id: query })
+      setResults(result.items)
+      setNextToken(null)
+      setCurrentPage(1)
+      setPageInput('1')
+      setPageStartTokens({ 1: null })
     } catch (err) {
       console.error(err)
       setResults([])
@@ -67,6 +141,28 @@ export default function Admin() {
     if (e.key === 'Enter') {
       handleSearch()
     }
+  }
+
+  const handleNext = () => {
+    if (!nextToken || loading || query) {
+      return
+    }
+    loadPage(currentPage + 1)
+  }
+
+  const handlePrev = () => {
+    if (currentPage <= 1 || loading || query) {
+      return
+    }
+    loadPage(currentPage - 1)
+  }
+
+  const handleGoToPage = () => {
+    const page = Number(pageInput)
+    if (!Number.isInteger(page) || page < 1 || loading || query) {
+      return
+    }
+    loadPage(page)
   }
 
   return (
@@ -171,11 +267,7 @@ export default function Admin() {
                 </th>
 
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  評価
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  実績件数
+                  ステータス
                 </th>
 
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
@@ -219,13 +311,7 @@ export default function Admin() {
                     {item.applicantName}
                   </td>
 
-                  <td className="px-6 py-4">
-                    {item.rating}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    {item.achievementCount}
-                  </td>
+                  <td className="px-6 py-4">{item.status}</td>
 
                   <td className="px-6 py-4">
                     ¥{Number(item.proposalAmount).toLocaleString()}
@@ -244,6 +330,47 @@ export default function Admin() {
           {!loading && results.length === 0 && !error && (
             <div className="p-16 text-center text-slate-400">
               応募データがありません
+            </div>
+          )}
+
+          {!query && (
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={handlePrev}
+                  disabled={loading || currentPage <= 1}
+                  className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+                >
+                  前へ
+                </button>
+
+                <span className="text-sm text-slate-600 font-semibold">{currentPage}ページ目</span>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    value={pageInput}
+                    onChange={(e) => setPageInput(e.target.value)}
+                    className="w-20 px-2 py-2 rounded-lg border border-slate-300 text-sm"
+                  />
+                  <button
+                    onClick={handleGoToPage}
+                    disabled={loading}
+                    className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold disabled:bg-slate-300 disabled:text-slate-500"
+                  >
+                    移動
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  disabled={loading || !nextToken}
+                  className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+                >
+                  次へ
+                </button>
+              </div>
             </div>
           )}
 

@@ -4,6 +4,9 @@ Target frontend page:
 - frontend/src/pages/AdminJobList.jsx
 """
 
+import base64
+import json
+
 from boto3.dynamodb.conditions import Key
 from common.auth import get_claims, get_user_sub, is_admin_event
 from common.db import get_table_by_env
@@ -13,6 +16,22 @@ table = get_table_by_env("ADMIN_JOBS_TABLE_NAME")
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
+
+
+def _encode_next_token(last_key: dict | None) -> str | None:
+    if not last_key:
+        return None
+    return base64.urlsafe_b64encode(json.dumps(last_key).encode("utf-8")).decode("utf-8")
+
+
+def _decode_next_token(next_token: str | None) -> dict | None:
+    if not next_token:
+        return None
+    try:
+        raw = base64.urlsafe_b64decode(next_token.encode("utf-8")).decode("utf-8")
+        return json.loads(raw)
+    except Exception:
+        return None
 
 
 # ---------- クエリ ----------
@@ -39,8 +58,11 @@ def _list_jobs(owner_user_id: str, limit: int, next_token: str | None, status: s
         from boto3.dynamodb.conditions import Attr
         kwargs["FilterExpression"] = Attr("status").eq(status)
 
-    if next_token:
-        kwargs["ExclusiveStartKey"] = {"nextToken": next_token}
+    start_key = _decode_next_token(next_token)
+    if next_token and start_key is None:
+        raise ValueError("Invalid nextToken")
+    if start_key:
+        kwargs["ExclusiveStartKey"] = start_key
 
     try:
         resp = table.query(**kwargs)
@@ -55,13 +77,13 @@ def _list_jobs(owner_user_id: str, limit: int, next_token: str | None, status: s
             scan_kwargs["FilterExpression"] = (
                 scan_kwargs["FilterExpression"] & Attr("status").eq(status)
             )
-        if next_token:
-            scan_kwargs["ExclusiveStartKey"] = {"nextToken": next_token}
+        if start_key:
+            scan_kwargs["ExclusiveStartKey"] = start_key
         resp = table.scan(**scan_kwargs)
 
     items = resp.get("Items", [])
     last_key = resp.get("LastEvaluatedKey")
-    out_token = last_key.get("nextToken") if last_key else None
+    out_token = _encode_next_token(last_key)
     return items, out_token
 
 
@@ -69,7 +91,7 @@ def _format_item(item: dict) -> dict:
     """フロントエンド向けに型を整形する。"""
     return {
         **item,
-        "budget": float(item["budget"]) if "budget" in item else None,
+        "budget": float(item["budget"]) if item.get("budget") is not None else None,
     }
 
 

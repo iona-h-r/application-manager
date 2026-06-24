@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { CognitoUserPool } from 'amazon-cognito-identity-js'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
@@ -18,8 +18,6 @@ export default function Apply() {
     jobTitle: '',
     applicantUserId: '',
     applicantName: '',
-    rating: '',
-    achievementCount: '',
     proposalAmount: '',
     proposalContent: '',
   })
@@ -27,6 +25,7 @@ export default function Apply() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
+  const [authorized, setAuthorized] = useState(null)
 
   useEffect(() => {
     if (!selectedJobId && !selectedJobTitle) {
@@ -45,16 +44,26 @@ export default function Apply() {
 
     if (!currentUser) {
       setError('Cognito のログイン情報が取得できませんでした。')
+      setAuthorized(false)
       return
     }
 
     currentUser.getSession((err, session) => {
       if (err || !session?.isValid()) {
         setError('Cognito のセッションが無効です。再ログインしてください。')
+        setAuthorized(false)
         return
       }
 
       const payload = session.getIdToken().decodePayload()
+      const groups = payload['cognito:groups'] || []
+      const isAdmin = Array.isArray(groups) && groups.includes('Admin')
+      if (isAdmin) {
+        setAuthorized(false)
+        setError('管理者ユーザーは応募フォームを利用できません。')
+        return
+      }
+
       const applicantUserId = payload.sub || currentUser.getUsername() || ''
       const applicantName =
         payload.name ||
@@ -68,8 +77,13 @@ export default function Apply() {
         applicantUserId,
         applicantName,
       }))
+      setAuthorized(true)
     })
   }, [])
+
+  if (authorized === false) {
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -85,8 +99,6 @@ export default function Apply() {
         jobTitle: formData.jobTitle,
         applicantUserId: formData.applicantUserId,
         applicantName: formData.applicantName,
-        rating: Number(formData.rating),
-        achievementCount: Number(formData.achievementCount),
         proposalAmount: Number(formData.proposalAmount),
         proposalContent: formData.proposalContent,
       })
@@ -202,52 +214,7 @@ export default function Apply() {
               />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  評価
-                </label>
-
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="4.9"
-                  value={formData.rating}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      rating: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  実績件数
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="150"
-                  value={formData.achievementCount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      achievementCount: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-
+            <div className="grid md:grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   提案金額

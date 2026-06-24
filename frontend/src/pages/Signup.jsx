@@ -10,7 +10,6 @@ export default function Signup() {
   const [familyName, setFamilyName] = useState('')
   const [givenName, setGivenName] = useState('')
   const [error, setError] = useState(null)
-  const [done, setDone] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -24,22 +23,9 @@ export default function Signup() {
 
     userPool.signUp(email, password, attributes, null, (err) => {
       if (err) { setError(err.message); return }
-      setDone(true)
+      // 認証コード入力画面へリダイレクト
+      window.location.href = `/confirm?email=${encodeURIComponent(email)}`
     })
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">登録完了！</p>
-          <p className="text-gray-500 mb-6">確認コードをメールで送信しました。</p>
-          <a href="/login" className="text-blue-600 font-semibold hover:underline">
-            ログインへ
-          </a>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -54,8 +40,6 @@ export default function Signup() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* 氏名 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">姓</label>
@@ -79,7 +63,6 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* メールアドレス */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
             <input
@@ -92,7 +75,6 @@ export default function Signup() {
             />
           </div>
 
-          {/* パスワード */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
             <input

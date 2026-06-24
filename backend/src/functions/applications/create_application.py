@@ -3,6 +3,7 @@
 import json
 import os
 import uuid
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 
 import boto3
@@ -11,6 +12,7 @@ from common.db import get_table_by_env
 from common.response import create_response
 
 table = get_table_by_env("APPLICATIONS_TABLE_NAME")
+admin_jobs_table = get_table_by_env("ADMIN_JOBS_TABLE_NAME")
 
 # SES は設定されている場合のみ使用
 SES_ENABLED = os.environ.get("SES_ENABLED", "false").lower() == "true"
@@ -28,8 +30,6 @@ REQUIRED_FIELDS = [
     "jobId",
     "jobTitle",
     "applicantName",
-    "rating",
-    "achievementCount",
     "proposalAmount",
     "proposalContent",
 ]
@@ -46,31 +46,13 @@ def _validate(body: dict) -> list[str]:
             errors.append(f"'{field}' は必須項目です。")
 
     # 型・範囲チェック（存在する場合のみ）
-    rating = body.get("rating")
-    if rating is not None:
-        try:
-            r = float(rating)
-            if not (0 <= r <= 5):
-                errors.append("'rating' は 0〜5 の範囲で指定してください。")
-        except (TypeError, ValueError):
-            errors.append("'rating' は数値で指定してください。")
-
-    achievement_count = body.get("achievementCount")
-    if achievement_count is not None:
-        try:
-            ac = int(achievement_count)
-            if ac < 0:
-                errors.append("'achievementCount' は 0 以上の整数で指定してください。")
-        except (TypeError, ValueError):
-            errors.append("'achievementCount' は整数で指定してください。")
-
     proposal_amount = body.get("proposalAmount")
     if proposal_amount is not None:
         try:
-            pa = float(proposal_amount)
+            pa = Decimal(str(proposal_amount))
             if pa < 0:
                 errors.append("'proposalAmount' は 0 以上の値で指定してください。")
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, InvalidOperation):
             errors.append("'proposalAmount' は数値で指定してください。")
 
     return errors
@@ -93,6 +75,19 @@ def _get_applicant_user_id(claims: dict, body: dict) -> str | None:
     return user_id or None
 
 
+def _get_job_owner_user_id(job_id: str) -> str | None:
+    if not job_id:
+        return None
+
+    resp = admin_jobs_table.get_item(Key={"id": job_id})
+    job = resp.get("Item")
+    if not job:
+        return None
+
+    owner_user_id = str(job.get("ownerUserId") or "").strip()
+    return owner_user_id or None
+
+
 # ---------- SES 通知 ----------
 
 def _notify_admin(item: dict) -> None:
@@ -107,9 +102,8 @@ def _notify_admin(item: dict) -> None:
             f"申請ID      : {item['id']}\n"
             f"ポジション  : {item['jobTitle']}\n"
             f"申請者      : {item['applicantName']}\n"
-            f"評価        : {item['rating']}\n"
-            f"実績件数    : {item['achievementCount']}\n"
             f"提案金額    : {item['proposalAmount']}\n"
+            f"ステータス  : {item['status']}\n"
             f"登録日時    : {item['createdAt']}\n\n"
             f"提案内容:\n{item['proposalContent']}\n\n\n"
             f"詳細はこちら:\n"
@@ -155,24 +149,28 @@ def handler(event, context):
             return create_response(400, {"message": "'applicantUserId' は必須項目です。"})
         return create_response(401, {"message": "認証情報からユーザーIDを取得できませんでした。"})
 
+    owner_user_id = _get_job_owner_user_id(body["jobId"])
+    if not owner_user_id:
+        return create_response(404, {"message": "応募対象の求人が見つかりません。"})
+
     # 5) DynamoDB へ保存
     item = {
         "id": application_id,          # PK
-        "entityType": "APPLICATION",   # createdAt-index GSI 用パーティションキー
         "createdAt": created_at,
         "jobId": body["jobId"],
         "jobTitle": body["jobTitle"],
+        "ownerUserId": owner_user_id,
         "applicantUserId": applicant_user_id,
-        "applicantEmail": claims.get("email") or body.get("applicantEmail"),
         "applicantName": body["applicantName"],
-        "rating": str(body["rating"]),           # DynamoDB の Number 型を避け文字列で保持
-        "achievementCount": int(body["achievementCount"]),
-        "proposalAmount": str(body["proposalAmount"]),
+        "proposalAmount": Decimal(str(body["proposalAmount"])),
         "proposalContent": body["proposalContent"],
+        "status": "APPLIED",
         # 任意項目があれば透過的に保存
         **{
             k: v for k, v in body.items()
-            if k not in REQUIRED_FIELDS and k != "applicantUserId" and v is not None
+            if k not in REQUIRED_FIELDS
+            and k not in ["applicantUserId", "status", "createdAt", "reviewedBy", "reviewedAt"]
+            and v is not None
         },
     }
 
@@ -200,5 +198,6 @@ def handler(event, context):
             "message": "申請が正常に登録されました。",
             "id": application_id,
             "createdAt": created_at,
+            "ownerUserId": owner_user_id,
         },
     )

@@ -39,15 +39,33 @@ create_table_if_not_exists() {
 create_table_if_not_exists "applications" \
   --attribute-definitions \
     AttributeName=id,AttributeType=S \
-    AttributeName=entityType,AttributeType=S \
+    AttributeName=jobId,AttributeType=S \
+    AttributeName=applicantUserId,AttributeType=S \
+    AttributeName=status,AttributeType=S \
     AttributeName=createdAt,AttributeType=S \
   --key-schema \
     AttributeName=id,KeyType=HASH \
   --global-secondary-indexes '[
     {
-      "IndexName": "createdAt-index",
+      "IndexName": "jobId-createdAt-index",
       "KeySchema": [
-        {"AttributeName": "entityType", "KeyType": "HASH"},
+        {"AttributeName": "jobId", "KeyType": "HASH"},
+        {"AttributeName": "createdAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    },
+    {
+      "IndexName": "applicantUserId-createdAt-index",
+      "KeySchema": [
+        {"AttributeName": "applicantUserId", "KeyType": "HASH"},
+        {"AttributeName": "createdAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    },
+    {
+      "IndexName": "status-createdAt-index",
+      "KeySchema": [
+        {"AttributeName": "status", "KeyType": "HASH"},
         {"AttributeName": "createdAt", "KeyType": "RANGE"}
       ],
       "Projection": {"ProjectionType": "ALL"}
@@ -59,11 +77,38 @@ create_table_if_not_exists "applications" \
 create_table_if_not_exists "admin-jobs" \
   --attribute-definitions \
     AttributeName=id,AttributeType=S \
+    AttributeName=status,AttributeType=S \
+    AttributeName=location,AttributeType=S \
+    AttributeName=employmentType,AttributeType=S \
     AttributeName=ownerUserId,AttributeType=S \
     AttributeName=createdAt,AttributeType=S \
   --key-schema \
     AttributeName=id,KeyType=HASH \
   --global-secondary-indexes '[
+    {
+      "IndexName": "status-createdAt-index",
+      "KeySchema": [
+        {"AttributeName": "status", "KeyType": "HASH"},
+        {"AttributeName": "createdAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    },
+    {
+      "IndexName": "location-createdAt-index",
+      "KeySchema": [
+        {"AttributeName": "location", "KeyType": "HASH"},
+        {"AttributeName": "createdAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    },
+    {
+      "IndexName": "employmentType-createdAt-index",
+      "KeySchema": [
+        {"AttributeName": "employmentType", "KeyType": "HASH"},
+        {"AttributeName": "createdAt", "KeyType": "RANGE"}
+      ],
+      "Projection": {"ProjectionType": "ALL"}
+    },
     {
       "IndexName": "ownerUserId-createdAt-index",
       "KeySchema": [
