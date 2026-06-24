@@ -26,10 +26,12 @@ def get_claims(event):
     authorizer = event.get('requestContext', {}).get('authorizer', {})
 
     claims = authorizer.get('claims')
+    print(json.dumps(claims, ensure_ascii=False))
     if isinstance(claims, dict):
         return claims
 
     jwt_claims = authorizer.get('jwt', {}).get('claims', {})
+    print(json.dumps(jwt_claims, ensure_ascii=False))
     if isinstance(jwt_claims, dict):
         return jwt_claims
 
@@ -37,17 +39,25 @@ def get_claims(event):
 
 
 def get_groups(claims):
-    groups_raw = claims.get('cognito:groups', '')
+    # Cognito では通常 `cognito:groups` だが、環境によって `groups` に入ることがある。
+    groups_raw = claims.get('cognito:groups')
+    if groups_raw is None:
+        groups_raw = claims.get('groups', '')
+
     if isinstance(groups_raw, list):
-        return groups_raw
-    return [g.strip() for g in groups_raw.split(',') if g.strip()]
+        return [str(g).strip() for g in groups_raw if str(g).strip()]
+
+    return [g.strip() for g in str(groups_raw).split(',') if g.strip()]
 
 
 def has_group(claims, required_group):
-    return required_group in get_groups(claims)
+    normalized_required = str(required_group).strip().lower()
+    normalized_groups = {g.strip().lower() for g in get_groups(claims)}
+    return normalized_required in normalized_groups
 
 
 def is_admin_event(event):
+    print(json.dumps(event, ensure_ascii=False))
     if os.environ.get('SKIP_AUTH') == 'true':
         return True
     return has_group(get_claims(event), 'Admin')
