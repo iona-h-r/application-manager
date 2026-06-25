@@ -44,3 +44,8 @@ output "emergency_shutdown_lambda_name" {
   description = "Emergency shutdown Lambda function name"
   value       = aws_lambda_function.emergency_shutdown.function_name
 }
+
+output "api_gateway_id" {
+  description = "API Gateway HTTP API ID"
+  value       = aws_apigatewayv2_api.main.id
+}
