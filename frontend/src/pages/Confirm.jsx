@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CognitoUser, CognitoUserPool } from 'amazon-cognito-identity-js'
 import { userPoolConfig } from '../lib/cognitoConfig'
 
 const userPool = new CognitoUserPool(userPoolConfig)
 
 export default function Confirm() {
-  // URLパラメータからメールアドレスを取得
-  const email = new URLSearchParams(window.location.search).get('email') ?? ''
+  // URLパラメータからメールアドレスと再送フラグを取得
+  const params = new URLSearchParams(window.location.search)
+  const email = params.get('email') ?? ''
+  const shouldResend = params.get('resend') === 'true'
 
   const [code, setCode] = useState('')
   const [error, setError] = useState(null)
@@ -14,6 +16,15 @@ export default function Confirm() {
   const [resent, setResent] = useState(false)
 
   const cognitoUser = new CognitoUser({ Username: email, Pool: userPool })
+
+  // サインアップ離脱ユーザーの再訪問時: マウント時に自動でコードを再送
+  useEffect(() => {
+    if (!shouldResend) return
+    cognitoUser.resendConfirmationCode((err) => {
+      if (err) { setError(err.message); return }
+      setResent(true)
+    })
+  }, [])
 
   // 認証コードを確認
   const handleSubmit = (e) => {
