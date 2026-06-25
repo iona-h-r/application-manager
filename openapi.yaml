@@ -1,10 +1,13 @@
 openapi: 3.0.1
 info:
   title: Application Manager API
-  version: 2026-06-25 11:16:59UTC
   description: 求人・応募管理システム API リファレンス
+  version: 1.0.0
 servers:
-- url: https://hjbq7tiphc.execute-api.ap-northeast-1.amazonaws.com/
+- url: https://hjbq7tiphc.execute-api.ap-northeast-1.amazonaws.com/{basePath}
+  variables:
+    basePath:
+      default: ''
 tags:
 - name: Environment
 - name: Application
@@ -15,15 +18,120 @@ paths:
       responses:
         default:
           description: Default response for GET /admin/applications
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Pagination'
+                - type: object
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Application'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 権限エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: id 指定時に応募が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
-      - application-manager-prod-cognito-jwt: []
+      - CognitoJWT: []
+      summary: 応募一覧取得（管理者）
+      description: ログイン管理者が作成した求人への応募を作成日時降順で取得する。Admin グループのみ。
+      tags:
+      - Admin - Applications
+      parameters:
+      - name: limit
+        in: query
+        description: '取得件数（デフォルト: 20、最大: 100）'
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - name: nextToken
+        in: query
+        description: ページネーショントークン
+        schema:
+          type: string
+      - name: id
+        in: query
+        description: 指定した場合は単一応募を返す
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: 指定した場合は該当ステータスのみ返す
+        schema:
+          type: string
   /admin/applications/{applicationId}:
     get:
       responses:
         default:
           description: Default response for GET /admin/applications/{applicationId}
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          description: パスパラメータ不正
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 権限エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 応募が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
-      - application-manager-prod-cognito-jwt: []
+      - CognitoJWT: []
+      summary: 応募詳細取得（管理者）
+      description: 指定した応募の詳細を取得する。Admin グループのみ。
+      tags:
+      - Admin - Applications
+      parameters:
+      - name: applicationId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: APP-20260624-A1B2C3D4
     parameters:
     - name: applicationId
       in: path
@@ -36,28 +144,423 @@ paths:
       responses:
         default:
           description: Default response for GET /admin/jobs
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Pagination'
+                - type: object
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Job'
+        '403':
+          description: 権限エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
-      - application-manager-prod-cognito-jwt: []
+      - CognitoJWT: []
+      summary: 求人一覧取得（管理者）
+      description: ログイン管理者が作成した求人を作成日時降順で取得する。
+      tags:
+      - Admin - Jobs
+      parameters:
+      - name: limit
+        in: query
+        description: '取得件数（デフォルト: 20、最大: 100）'
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - name: nextToken
+        in: query
+        description: ページネーショントークン
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: 指定した場合は該当ステータスのみ返す
+        schema:
+          type: string
     post:
       responses:
         default:
           description: Default response for POST /admin/jobs
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job created successfully.
+                  jobId:
+                    type: string
+                    example: JOB-20260624-A1B2C3D4
+                  status:
+                    type: string
+                    example: OPEN
+                  jobTitle:
+                    type: string
+                    example: 放射線技師
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: '2026-06-24T01:00:00+00:00'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 権限エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
-      - application-manager-prod-cognito-jwt: []
+      - CognitoJWT: []
+      summary: 求人作成（管理者）
+      description: 求人を新規作成する。Admin グループのみ。
+      tags:
+      - Admin - Jobs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - jobTitle
+              - company
+              - location
+              - employmentType
+              - budget
+              - description
+              properties:
+                jobTitle:
+                  type: string
+                  example: 放射線技師
+                company:
+                  type: string
+                  example: ○○総合病院
+                location:
+                  type: string
+                  example: 北海道札幌市中央区
+                employmentType:
+                  type: string
+                  example: 正社員
+                budget:
+                  type: number
+                  example: 5000000
+                description:
+                  type: string
+                  example: MRI・CT撮影業務を担当
   /jobs:
     get:
       responses:
         default:
           description: Default response for GET /jobs
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Pagination'
+                - type: object
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/PublicJob'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      summary: 求人一覧取得
+      description: 公開求人を作成日時降順で取得する。認証不要。
+      tags:
+      - Jobs
+      parameters:
+      - name: limit
+        in: query
+        description: '取得件数（デフォルト: 10、最大: 100）'
+        schema:
+          type: integer
+          default: 10
+          maximum: 100
+      - name: nextToken
+        in: query
+        description: ページネーショントークン
+        schema:
+          type: string
   /applications:
     post:
       responses:
         default:
           description: Default response for POST /applications
+        '201':
+          description: 応募完了
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 申請が正常に登録されました。
+                  id:
+                    type: string
+                    example: APP-20260624-A1B2C3D4
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: '2026-06-24T01:00:00+00:00'
+                  ownerUserId:
+                    type: string
+                    example: 12345678-abcd-efgh-ijkl-1234567890ab
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 応募対象の求人が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
-      - application-manager-prod-cognito-jwt: []
+      - CognitoJWT: []
+      summary: 求人に応募する
+      description: ログインユーザーが求人に応募する。
+      tags:
+      - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - jobId
+              - jobTitle
+              - applicantName
+              - proposalAmount
+              - proposalContent
+              properties:
+                jobId:
+                  type: string
+                  example: JOB-20260624-A1B2C3D4
+                jobTitle:
+                  type: string
+                  example: 放射線技師
+                applicantName:
+                  type: string
+                  example: 山田太郎
+                applicantUserId:
+                  type: string
+                  description: ローカル開発（SKIP_AUTH=true）時のみ必須
+                  example: abcdef12-3456-7890-abcd-1234567890ab
+                proposalAmount:
+                  type: number
+                  example: 300000
+                proposalContent:
+                  type: string
+                  example: MRI・CT業務経験10年です。
 components:
   securitySchemes:
     application-manager-prod-cognito-jwt:
       type: oauth2
       flows: {}
+    CognitoJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito User Pool JWT トークン
+  schemas:
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          example: JOB-20260624-A1B2C3D4
+        jobTitle:
+          type: string
+          example: 放射線技師
+        company:
+          type: string
+          example: ○○総合病院
+        location:
+          type: string
+          example: 北海道札幌市中央区
+        employmentType:
+          type: string
+          example: 正社員
+        budget:
+          type: number
+          example: 5000000
+        description:
+          type: string
+          example: MRI・CT撮影業務を担当
+        ownerUserId:
+          type: string
+          example: 12345678-abcd-efgh-ijkl-1234567890ab
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-06-24T01:00:00+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-06-24T01:00:00+00:00'
+    PublicJob:
+      type: object
+      properties:
+        id:
+          type: string
+          example: JOB-20260624-A1B2C3D4
+        title:
+          type: string
+          example: 放射線技師
+        company:
+          type: string
+          example: ○○総合病院
+        location:
+          type: string
+          example: 北海道札幌市中央区
+        type:
+          type: string
+          example: 正社員
+        budget:
+          type: number
+          example: 5000000
+        description:
+          type: string
+          example: MRI・CT撮影業務を担当
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-06-24T01:00:00+00:00'
+    Application:
+      type: object
+      properties:
+        id:
+          type: string
+          example: APP-20260624-A1B2C3D4
+        jobId:
+          type: string
+          example: JOB-20260624-A1B2C3D4
+        jobTitle:
+          type: string
+          example: 放射線技師
+        ownerUserId:
+          type: string
+          example: 12345678-abcd-efgh-ijkl-1234567890ab
+        applicantUserId:
+          type: string
+          example: abcdef12-3456-7890-abcd-1234567890ab
+        applicantName:
+          type: string
+          example: 山田太郎
+        proposalAmount:
+          type: number
+          example: 300000
+        proposalContent:
+          type: string
+          example: MRI・CT業務経験10年です。
+        status:
+          type: string
+          example: APPLIED
+        reviewedBy:
+          type: string
+          nullable: true
+          example: local-admin
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-06-24T10:00:00+00:00'
+        interviewDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-07-01T01:00:00+00:00'
+        interviewMemo:
+          type: string
+          nullable: true
+          example: 面接時に過去案件の実績を確認予定
+        rejectionReason:
+          type: string
+          nullable: true
+          example: 要件不一致
+        attachmentUrl:
+          type: string
+          nullable: true
+          example: https://example.com/files/portfolio.pdf
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-06-24T01:00:00+00:00'
+    Pagination:
+      type: object
+      properties:
+        nextToken:
+          type: string
+          nullable: true
+          description: 次ページ取得用トークン。null の場合は最終ページ。
+          example: eyJpZCI6ICJBUFAtMjAyNjA2MjQtQTFCMkMzRDQifQ==
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: エラーメッセージ
