@@ -51,78 +51,67 @@ export default function Signup() {
     })
   }
 
+  const C = { bg: '#09090B', surface: '#18181B', border: '#27272A', textPrimary: '#FAFAFA', textSecondary: '#A1A1AA', accent: '#10B981' }
+
+  const inputStyle = {
+    width: '100%',
+    padding: '9px 14px',
+    backgroundColor: C.bg,
+    border: `1px solid ${C.border}`,
+    borderRadius: 6,
+    color: C.textPrimary,
+    fontSize: 13,
+    outline: 'none',
+    boxSizing: 'border-box',
+  }
+
+  const handleFocus = (e) => { e.target.style.borderColor = C.accent }
+  const handleBlur = (e) => { e.target.style.borderColor = C.border }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">アカウント作成</h2>
+    <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
+      <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 420 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 24, letterSpacing: '-0.02em' }}>アカウント作成</h2>
 
         {error && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          <div style={{ marginBottom: 16, padding: '10px 14px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, color: '#F87171', fontSize: 13 }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">姓</label>
-              <input
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                placeholder="山田"
-                value={familyName}
-                onChange={(e) => setFamilyName(e.target.value)}
-                required
-              />
+              <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>姓</label>
+              <input style={inputStyle} placeholder="山田" value={familyName} onChange={(e) => setFamilyName(e.target.value)} onFocus={handleFocus} onBlur={handleBlur} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">名</label>
-              <input
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                placeholder="太郎"
-                value={givenName}
-                onChange={(e) => setGivenName(e.target.value)}
-                required
-              />
+              <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>名</label>
+              <input style={inputStyle} placeholder="太郎" value={givenName} onChange={(e) => setGivenName(e.target.value)} onFocus={handleFocus} onBlur={handleBlur} required />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
-            <input
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>メールアドレス</label>
+            <input style={inputStyle} type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} onFocus={handleFocus} onBlur={handleBlur} required />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
-            <input
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              type="password"
-              placeholder="8文字以上"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>パスワード</label>
+            <input style={inputStyle} type="password" placeholder="8文字以上" value={password} onChange={(e) => setPassword(e.target.value)} onFocus={handleFocus} onBlur={handleBlur} required />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-md"
+            style={{ marginTop: 8, width: '100%', padding: '10px', backgroundColor: C.accent, color: C.bg, border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
           >
             登録する
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: C.textSecondary }}>
           登録済みの方は{' '}
-          <a href="/login" className="text-blue-600 font-semibold hover:underline">
-            ログイン
-          </a>
+          <a href="/login" style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}>ログイン</a>
         </p>
       </div>
     </div>

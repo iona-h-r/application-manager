@@ -165,210 +165,143 @@ export default function Admin() {
     loadPage(page)
   }
 
+  const C = { bg: '#09090B', surface: '#18181B', border: '#27272A', textPrimary: '#FAFAFA', textSecondary: '#A1A1AA', accent: '#10B981' }
+
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
+      <style>{`
+        @media (max-width: 600px) {
+          .admin-header-row { flex-direction: column !important; align-items: flex-start !important; }
+          .admin-btn-row { width: 100%; }
+          .admin-btn-row button { flex: 1; }
+          .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .admin-table-wrap table { min-width: 560px; }
+        }
+      `}</style>
+      <div>
 
-        <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="admin-header-row" style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            管理者ダッシュボード
-          </h1>
-
-          <p className="text-slate-500">
-            応募情報の検索・閲覧
-          </p>
+            <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Admin</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>
+              管理者ダッシュボード
+            </h1>
+            <p style={{ fontSize: 13, color: C.textSecondary }}>応募情報の検索・閲覧</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="admin-btn-row" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button
               onClick={() => navigate('/admin/jobs')}
-              className="px-5 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold transition"
+              style={{ padding: '7px 14px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, cursor: 'pointer' }}
             >
               発注案件一覧
             </button>
-
             <button
               onClick={() => navigate('/admin/jobs/new')}
-              className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+              style={{ padding: '7px 14px', backgroundColor: C.accent, border: 'none', borderRadius: 6, color: C.bg, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               案件を作成
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-6">
-
-          <div className="flex gap-3">
-
+        <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <input
-              className="
-                flex-1
-                px-4
-                py-3
-                rounded-xl
-                border
-                border-slate-200
-                focus:ring-2
-                focus:ring-indigo-500
-                outline-none
-              "
+              style={{ flex: 1, padding: '9px 14px', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, outline: 'none' }}
               placeholder="応募IDを入力（空欄で全件表示）"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={(e) => { e.target.style.borderColor = C.accent }}
+              onBlur={(e) => { e.target.style.borderColor = C.border }}
             />
-
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="
-                px-6
-                py-3
-                rounded-xl
-                bg-indigo-600
-                hover:bg-indigo-700
-                disabled:bg-slate-400
-                text-white
-                font-semibold
-                transition
-              "
+              style={{ padding: '9px 18px', backgroundColor: loading ? C.border : C.accent, color: loading ? C.textSecondary : C.bg, border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}
             >
               {loading ? '検索中...' : '検索'}
             </button>
-
           </div>
-
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="admin-table-wrap" style={{ border: `1px solid ${C.border}`, borderRadius: 8, overflow: 'hidden' }}>
 
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 border-b border-red-100">
+            <div style={{ padding: '10px 16px', backgroundColor: 'rgba(239,68,68,0.08)', borderBottom: `1px solid rgba(239,68,68,0.3)`, color: '#F87171', fontSize: 13 }}>
               {error}
             </div>
           )}
 
-          <table className="w-full">
-
-            <thead className="bg-slate-50 border-b border-slate-200">
-
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  応募ID
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  案件名
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  応募者名
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  ステータス
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  提案金額
-                </th>
-
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">
-                  登録日時
-                </th>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: C.surface, borderBottom: `1px solid ${C.border}` }}>
+                {['応募ID', '案件名', '応募者名', 'ステータス', '提案金額', '登録日時'].map((h) => (
+                  <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 12, fontWeight: 600, color: C.textSecondary }}>{h}</th>
+                ))}
               </tr>
-
             </thead>
-
             <tbody>
-
               {results.map((item) => (
                 <tr
                   key={item.id ?? item.applicationId}
-                  onClick={() =>
-                    navigate(
-                      `/admin/applications/${item.id ?? item.applicationId}`
-                    )
-                  }
-                  className="
-                    border-b
-                    border-slate-100
-                    hover:bg-slate-50
-                    cursor-pointer
-                    transition
-                  "
+                  onClick={() => navigate(`/admin/applications/${item.id ?? item.applicationId}`)}
+                  style={{ borderBottom: `1px solid ${C.border}`, cursor: 'pointer', backgroundColor: C.surface, transition: 'background-color 0.1s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1C1C1F' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = C.surface }}
                 >
-                  <td className="px-6 py-4 font-mono text-sm text-slate-500">
-                    {item.id ?? item.applicationId}
+                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, color: C.textSecondary }}>{item.id ?? item.applicationId}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: C.textPrimary }}>{item.jobTitle}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: C.textPrimary, fontWeight: 500 }}>{item.applicantName}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13 }}>
+                    <span style={{ padding: '2px 8px', border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 11, color: C.textSecondary }}>{item.status}</span>
                   </td>
-
-                  <td className="px-6 py-4">
-                    {item.jobTitle}
-                  </td>
-
-                  <td className="px-6 py-4 font-medium">
-                    {item.applicantName}
-                  </td>
-
-                  <td className="px-6 py-4">{item.status}</td>
-
-                  <td className="px-6 py-4">
-                    ¥{Number(item.proposalAmount).toLocaleString()}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-slate-500">
-                    {item.createdAt}
-                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: C.textPrimary }}>¥{Number(item.proposalAmount).toLocaleString()}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: C.textSecondary }}>{item.createdAt}</td>
                 </tr>
               ))}
-
             </tbody>
-
           </table>
 
           {!loading && results.length === 0 && !error && (
-            <div className="p-16 text-center text-slate-400">
+            <div style={{ padding: '40px 16px', textAlign: 'center', color: C.textSecondary, fontSize: 13, backgroundColor: C.surface }}>
               応募データがありません
             </div>
           )}
 
           {!query && (
-            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
-              <div className="flex items-center justify-center gap-3">
+            <div style={{ padding: '14px 16px', borderTop: `1px solid ${C.border}`, backgroundColor: C.surface }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <button
                   onClick={handlePrev}
                   disabled={loading || currentPage <= 1}
-                  className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  style={{ padding: '7px 14px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, cursor: loading || currentPage <= 1 ? 'not-allowed' : 'pointer', opacity: loading || currentPage <= 1 ? 0.4 : 1 }}
                 >
-                  前へ
+                  ← 前へ
                 </button>
-
-                <span className="text-sm text-slate-600 font-semibold">{currentPage}ページ目</span>
-
-                <div className="flex items-center gap-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input
                     type="number"
                     min="1"
                     value={pageInput}
                     onChange={(e) => setPageInput(e.target.value)}
-                    className="w-20 px-2 py-2 rounded-lg border border-slate-300 text-sm"
+                    style={{ width: 56, padding: '7px 10px', backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, textAlign: 'center', outline: 'none' }}
                   />
                   <button
                     onClick={handleGoToPage}
                     disabled={loading}
-                    className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold disabled:bg-slate-300 disabled:text-slate-500"
+                    style={{ padding: '7px 12px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.4 : 1 }}
                   >
                     移動
                   </button>
                 </div>
-
                 <button
                   onClick={handleNext}
                   disabled={loading || !nextToken}
-                  className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  style={{ padding: '7px 14px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, cursor: loading || !nextToken ? 'not-allowed' : 'pointer', opacity: loading || !nextToken ? 0.4 : 1 }}
                 >
-                  次へ
+                  次へ →
                 </button>
               </div>
             </div>

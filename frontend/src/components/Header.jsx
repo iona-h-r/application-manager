@@ -6,6 +6,14 @@ import LogoutButton from './LogoutButton'
 
 const userPool = new CognitoUserPool(userPoolConfig)
 
+const C = {
+  bg: '#09090B',
+  border: '#27272A',
+  textPrimary: '#FAFAFA',
+  textSecondary: '#A1A1AA',
+  accent: '#10B981',
+}
+
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -32,31 +40,25 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200">
-      <div className="max-w-6xl mx-auto h-16 px-6 flex items-center justify-between">
-
-        <Link
-          to="/"
-          className="text-xl font-bold text-slate-900"
-        >
+    <header style={{ borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg, position: 'sticky', top: 0, zIndex: 50 }}>
+      <style>{`
+        @media (max-width: 400px) {
+          .header-logo { font-size: 13px !important; }
+          .header-nav { gap: 12px !important; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 16px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link to="/" className="header-logo" style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, textDecoration: 'none', letterSpacing: '-0.02em' }}>
           Application Manager
         </Link>
 
-        <nav className="flex items-center gap-6">
-
+        <nav className="header-nav" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           {!isLoggedIn && (
             <>
-              <Link
-                to="/login"
-                className="text-slate-600 hover:text-slate-900"
-              >
+              <Link to="/login" style={{ fontSize: 13, color: C.textSecondary, textDecoration: 'none' }}>
                 ログイン
               </Link>
-
-              <Link
-                to="/signup"
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
-              >
+              <Link to="/signup" style={{ fontSize: 13, padding: '6px 14px', backgroundColor: C.accent, color: C.bg, borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>
                 新規登録
               </Link>
             </>
@@ -65,18 +67,13 @@ export default function Header() {
           {isLoggedIn && (
             <>
               {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="text-slate-600 hover:text-slate-900"
-                >
+                <Link to="/admin" style={{ fontSize: 13, color: C.textSecondary, textDecoration: 'none' }}>
                   管理者画面
                 </Link>
               )}
-
               <LogoutButton />
             </>
           )}
-
         </nav>
       </div>
     </header>

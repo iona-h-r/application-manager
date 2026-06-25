@@ -40,40 +40,54 @@ export default function Login() {
     })
   }
 
+  const C = { bg: '#09090B', surface: '#18181B', border: '#27272A', textPrimary: '#FAFAFA', textSecondary: '#A1A1AA', accent: '#10B981' }
+
+  const inputStyle = {
+    width: '100%',
+    padding: '9px 14px',
+    backgroundColor: C.bg,
+    border: `1px solid ${C.border}`,
+    borderRadius: 6,
+    color: C.textPrimary,
+    fontSize: 13,
+    outline: 'none',
+    boxSizing: 'border-box',
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-md">
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-8">ログイン</h2>
+    <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
+      <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 400 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 24, letterSpacing: '-0.02em' }}>ログイン</h2>
 
         {error && (
-          <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          <div style={{ marginBottom: 16, padding: '10px 14px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, color: '#F87171', fontSize: 13 }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
-              メールアドレス
-            </label>
+            <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>メールアドレス</label>
             <input
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition outline-none"
+              style={inputStyle}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={(e) => { e.target.style.borderColor = C.accent }}
+              onBlur={(e) => { e.target.style.borderColor = C.border }}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
-              パスワード
-            </label>
+            <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>パスワード</label>
             <input
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition outline-none"
+              style={inputStyle}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={(e) => { e.target.style.borderColor = C.accent }}
+              onBlur={(e) => { e.target.style.borderColor = C.border }}
               required
             />
           </div>
@@ -81,11 +95,16 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all"
+            style={{ marginTop: 8, width: '100%', padding: '10px', backgroundColor: loading ? C.border : C.accent, color: loading ? C.textSecondary : C.bg, border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}
           >
             {loading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
+
+        <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: C.textSecondary }}>
+          アカウントをお持ちでない方は{' '}
+          <a href="/signup" style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}>新規登録</a>
+        </p>
       </div>
     </div>
   )

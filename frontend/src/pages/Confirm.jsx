@@ -50,38 +50,54 @@ export default function Confirm() {
     })
   }
 
+  const C = { bg: '#09090B', surface: '#18181B', border: '#27272A', textPrimary: '#FAFAFA', textSecondary: '#A1A1AA', accent: '#10B981' }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">メール認証</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          <span className="font-medium text-gray-700">{email}</span> に送信した
-          認証コードを入力してください。
+    <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
+      <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 400 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 8, letterSpacing: '-0.02em' }}>メール認証</h2>
+        <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 24 }}>
+          <span style={{ color: C.textPrimary }}>{email}</span> に送信した認証コードを入力してください。
         </p>
 
         {error && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          <div style={{ marginBottom: 14, padding: '10px 14px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, color: '#F87171', fontSize: 13 }}>
             {error}
           </div>
         )}
 
         {resent && (
-          <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-600">
+          <div style={{ marginBottom: 14, padding: '10px 14px', backgroundColor: 'rgba(16,185,129,0.08)', border: `1px solid ${C.accent}`, borderRadius: 6, color: C.accent, fontSize: 13 }}>
             認証コードを再送しました。
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">認証コード</label>
+            <label style={{ display: 'block', fontSize: 12, color: C.textSecondary, marginBottom: 6 }}>認証コード</label>
             <input
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-center text-2xl tracking-widest font-mono"
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                backgroundColor: C.bg,
+                border: `1px solid ${C.border}`,
+                borderRadius: 6,
+                color: C.textPrimary,
+                fontSize: 24,
+                textAlign: 'center',
+                letterSpacing: '0.3em',
+                fontFamily: 'monospace',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
               type="text"
               inputMode="numeric"
               placeholder="000000"
               maxLength={6}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              onFocus={(e) => { e.target.style.borderColor = C.accent }}
+              onBlur={(e) => { e.target.style.borderColor = C.border }}
               required
             />
           </div>
@@ -89,17 +105,17 @@ export default function Confirm() {
           <button
             type="submit"
             disabled={loading || code.length < 6}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3.5 rounded-xl transition-all shadow-md"
+            style={{ width: '100%', padding: '10px', backgroundColor: loading || code.length < 6 ? C.border : C.accent, color: loading || code.length < 6 ? C.textSecondary : C.bg, border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: loading || code.length < 6 ? 'not-allowed' : 'pointer' }}
           >
             {loading ? '確認中...' : '認証する'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: C.textSecondary }}>
           コードが届かない場合は{' '}
           <button
             onClick={handleResend}
-            className="text-blue-600 font-semibold hover:underline"
+            style={{ background: 'none', border: 'none', color: C.accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
           >
             再送する
           </button>
