@@ -112,11 +112,28 @@ export default function Apply() {
     }
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/')
+  }
+
   if (done) {
     return (
       <MainLayout>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
           <div style={{ backgroundColor: '#18181B', border: '1px solid #27272A', borderRadius: 8, padding: '40px 32px', textAlign: 'center', maxWidth: 480, width: '100%' }}>
+            <div style={{ textAlign: 'left', marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={handleBack}
+                style={{ padding: '6px 10px', backgroundColor: 'transparent', border: '1px solid #27272A', borderRadius: 6, color: '#A1A1AA', fontSize: 12, cursor: 'pointer' }}
+              >
+                ← 戻る
+              </button>
+            </div>
             <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(16,185,129,0.12)', border: '1px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 18 }}>✓</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FAFAFA', marginBottom: 8 }}>
               応募が完了しました
@@ -144,13 +161,6 @@ export default function Apply() {
   }
   const handleFocus = (e) => { e.target.style.borderColor = C.accent }
   const handleBlur = (e) => { e.target.style.borderColor = C.border }
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1)
-      return
-    }
-    navigate('/')
-  }
 
   return (
     <MainLayout>
