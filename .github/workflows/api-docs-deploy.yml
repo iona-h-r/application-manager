@@ -50,7 +50,7 @@ jobs:
         run: |
           aws apigatewayv2 export-api \
             --api-id "${{ steps.tf.outputs.api_id }}" \
-            --output-type OAS30 \
+            --output-type YAML \
             --specification OAS30 \
             --no-include-extensions \
             openapi.yaml

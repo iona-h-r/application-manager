@@ -1,24 +1,35 @@
-name: API Docs Deploy
+name: Frontend Deploy
 
 on:
+  push:
+    branches:
+      - prd
+    paths:
+      - frontend/**
+      - .github/workflows/frontend-deploy.yml
   workflow_run:
     workflows:
       - Terraform Apply
     types:
       - completed
-    branches:
-      - prd
 
 permissions:
   id-token: write
-  contents: write
+  contents: read
 
 env:
   AWS_REGION: ap-northeast-1
+  TF_VAR_aws_region: ap-northeast-1
+  TF_VAR_app_name: application-manager
+  TF_VAR_environment: prod
+  TF_VAR_ses_from_address: ${{ secrets.SES_FROM_ADDRESS }}
+  TF_VAR_ses_admin_address: ${{ secrets.SES_ADMIN_ADDRESS }}
+  TF_VAR_frontend_domain_name: "" # カスタムドメインを利用する場合に指定。指定なければデフォルトドメイン
+  TF_VAR_github_actions_role_arn: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
 jobs:
-  deploy-docs:
-    if: github.event.workflow_run.conclusion == 'success'
+  deploy:
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
     environment: prd
     runs-on: ubuntu-latest
 
@@ -32,7 +43,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ── Terraform から API Gateway ID とベース URL を取得 ──────────
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -42,56 +52,35 @@ jobs:
         run: |
           terraform init -input=false
           OUTPUT_JSON=$(terraform output -json)
-          echo "api_id=$(echo "$OUTPUT_JSON"       | jq -r '.api_gateway_id.value')" >> "$GITHUB_OUTPUT"
-          echo "api_base_url=$(echo "$OUTPUT_JSON" | jq -r '.api_base_url.value')"  >> "$GITHUB_OUTPUT"
+          echo "api_base_url=$(echo "$OUTPUT_JSON" | jq -r '.api_base_url.value')" >> "$GITHUB_OUTPUT"
+          echo "user_pool_id=$(echo "$OUTPUT_JSON" | jq -r '.cognito_user_pool_id.value')" >> "$GITHUB_OUTPUT"
+          echo "user_pool_client_id=$(echo "$OUTPUT_JSON" | jq -r '.cognito_user_pool_client_id.value')" >> "$GITHUB_OUTPUT"
+          echo "frontend_bucket=$(echo "$OUTPUT_JSON" | jq -r '.frontend_bucket_name.value')" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(echo "$OUTPUT_JSON" | jq -r '.cloudfront_distribution_id.value')" >> "$GITHUB_OUTPUT"
 
-      # ── AWS から OpenAPI 定義を取得 ──────────────────────────────────
-      - name: Export OpenAPI from API Gateway
-        run: |
-          aws apigatewayv2 export-api \
-            --api-id "${{ steps.tf.outputs.api_id }}" \
-            --output-type OAS30 \
-            --specification OAS30 \
-            --no-include-extensions \
-            openapi.yaml
-
-      # ── servers.url を実際のエンドポイントで上書き ─────────────────
-      - name: Patch OpenAPI metadata
-        run: |
-          pip install pyyaml --quiet
-          python3 - <<PYEOF
-          import yaml
-
-          with open("openapi.yaml") as f:
-              spec = yaml.safe_load(f)
-
-          spec.setdefault("info", {})["title"] = "Application Manager API"
-          spec["info"]["description"] = "求人・応募管理システム API リファレンス"
-          spec["servers"] = [{"url": "${{ steps.tf.outputs.api_base_url }}"}]
-
-          with open("openapi.yaml", "w") as f:
-              yaml.dump(spec, f, allow_unicode=True, sort_keys=False)
-          PYEOF
-
-      # ── Redoc で静的 HTML をビルド ───────────────────────────────────
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Build Redoc HTML
-        run: |
-          mkdir -p docs
-          cp openapi.yaml docs/openapi.yaml
-          npx --yes @redocly/cli build-docs openapi.yaml \
-            --output docs/index.html \
-            --title "Application Manager API Docs"
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
 
-      # ── gh-pages ブランチへデプロイ ──────────────────────────────────
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./docs
-          commit_message: "docs: update API docs [${{ github.sha }}]"
+      - name: Build Frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ steps.tf.outputs.api_base_url }}
+          VITE_USER_POOL_ID: ${{ steps.tf.outputs.user_pool_id }}
+          VITE_USER_POOL_CLIENT_ID: ${{ steps.tf.outputs.user_pool_client_id }}
+          VITE_COGNITO_REGION: ${{ env.AWS_REGION }}
+        run: npm run build
+
+      - name: Upload to S3
+        working-directory: frontend
+        run: aws s3 sync dist s3://${{ steps.tf.outputs.frontend_bucket }} --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.tf.outputs.distribution_id }} --paths "/*"
