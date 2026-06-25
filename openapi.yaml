@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Application Manager API
-  version: 2026-06-25 10:46:00UTC
+  version: 2026-06-25 11:16:59UTC
   description: 求人・応募管理システム API リファレンス
 servers:
 - url: https://hjbq7tiphc.execute-api.ap-northeast-1.amazonaws.com/
