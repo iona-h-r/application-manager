@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js'
+import { CognitoUser, CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { userPoolConfig } from '../lib/cognitoConfig'
 
 const userPool = new CognitoUserPool(userPoolConfig)
@@ -22,9 +22,32 @@ export default function Signup() {
     ]
 
     userPool.signUp(email, password, attributes, null, (err) => {
-      if (err) { setError(err.message); return }
-      // 認証コード入力画面へリダイレクト
-      window.location.href = `/confirm?email=${encodeURIComponent(email)}`
+      if (err) {
+        if (err.code === 'UsernameExistsException') {
+          // 未確認 or 確認済みか区別するため resendConfirmationCode を試みる
+          const cognitoUser = new CognitoUser({ Username: email, Pool: userPool })
+          cognitoUser.resendConfirmationCode((resendErr) => {
+            if (resendErr) {
+              // 確認済みユーザー → ログインを促す
+              if (
+                resendErr.code === 'InvalidParameterException' &&
+                resendErr.message.includes('already confirmed')
+              ) {
+                setError('このメールアドレスはすでに登録済みです。ログインしてください。')
+                return
+              }
+              setError(resendErr.message)
+              return
+            }
+            // 再送成功 → 未確認ユーザー → 認証コード画面へ（コードは再送済み）
+            window.location.href = `/confirm?email=${encodeURIComponent(email)}&resend=true`
+          })
+          return
+        }
+        setError(err.message)
+        return
+      }
+      window.location.href = `/confirm?email=${encodeURIComponent(email)}&resend=false`
     })
   }
 
