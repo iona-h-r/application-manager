@@ -6,8 +6,6 @@ on:
       - Terraform Apply
     types:
       - completed
-    branches:
-      - prd
 
 permissions:
   id-token: write
@@ -45,7 +43,7 @@ jobs:
           echo "api_id=$(echo "$OUTPUT_JSON"       | jq -r '.api_gateway_id.value')" >> "$GITHUB_OUTPUT"
           echo "api_base_url=$(echo "$OUTPUT_JSON" | jq -r '.api_base_url.value')"  >> "$GITHUB_OUTPUT"
 
-      # ── AWS から OpenAPI 定義を取得 ──────────────────────────────────
+      # ── AWS から OpenAPI 定義をエクスポート ─────────────────────────
       - name: Export OpenAPI from API Gateway
         run: |
           aws apigatewayv2 export-api \
@@ -53,25 +51,16 @@ jobs:
             --output-type YAML \
             --specification OAS30 \
             --no-include-extensions \
-            openapi.yaml
+            openapi-exported.yaml
 
-      # ── servers.url を実際のエンドポイントで上書き ─────────────────
-      - name: Patch OpenAPI metadata
+      # ── overlay とマージ ────────────────────────────────────────────
+      - name: Merge OpenAPI with overlay
         run: |
           pip install pyyaml --quiet
-          python3 - <<PYEOF
-          import yaml
-
-          with open("openapi.yaml") as f:
-              spec = yaml.safe_load(f)
-
-          spec.setdefault("info", {})["title"] = "Application Manager API"
-          spec["info"]["description"] = "求人・応募管理システム API リファレンス"
-          spec["servers"] = [{"url": "${{ steps.tf.outputs.api_base_url }}"}]
-
-          with open("openapi.yaml", "w") as f:
-              yaml.dump(spec, f, allow_unicode=True, sort_keys=False)
-          PYEOF
+          python3 scripts/merge_openapi.py \
+            openapi-exported.yaml \
+            docs/openapi-overlay.yaml \
+            openapi-merged.yaml
 
       # ── Redoc で静的 HTML をビルド ───────────────────────────────────
       - name: Setup Node
@@ -81,10 +70,10 @@ jobs:
 
       - name: Build Redoc HTML
         run: |
-          mkdir -p docs
-          cp openapi.yaml docs/openapi.yaml
-          npx --yes @redocly/cli build-docs openapi.yaml \
-            --output docs/index.html \
+          mkdir -p docs/dist
+          cp openapi-merged.yaml docs/dist/openapi.yaml
+          npx --yes @redocly/cli build-docs openapi-merged.yaml \
+            --output docs/dist/index.html \
             --title "Application Manager API Docs"
 
       # ── gh-pages ブランチへデプロイ ──────────────────────────────────
@@ -93,5 +82,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./docs
+          publish_dir: ./docs/dist
           commit_message: "docs: update API docs [${{ github.sha }}]"
