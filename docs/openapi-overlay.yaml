@@ -176,7 +176,7 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: 取得件数（デフォルト: 10、最大: 100）
+          description: "取得件数（デフォルト: 10、最大: 100）"
           schema:
             type: integer
             default: 10
@@ -310,7 +310,7 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: 取得件数（デフォルト: 20、最大: 100）
+          description: "取得件数（デフォルト: 20、最大: 100）"
           schema:
             type: integer
             default: 20
@@ -515,7 +515,7 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: 取得件数（デフォルト: 20、最大: 100）
+          description: "取得件数（デフォルト: 20、最大: 100）"
           schema:
             type: integer
             default: 20
