@@ -12,6 +12,8 @@ on:
       - Terraform Apply
     types:
       - completed
+      
+  workflow_dispatch:
 
 permissions:
   id-token: write
