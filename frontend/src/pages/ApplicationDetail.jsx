@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
 
 export default function ApplicationDetail() {
+  const navigate = useNavigate()
   const { applicationId } = useParams()
 
   const [application, setApplication] = useState(null)
@@ -64,6 +66,13 @@ export default function ApplicationDetail() {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 28 }}>
+          <button
+            type="button"
+            onClick={() => navigate('/admin')}
+            style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+          >
+            ← 管理画面に戻る
+          </button>
           <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Admin</p>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em' }}>応募詳細</h1>
         </div>

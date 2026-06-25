@@ -179,6 +179,13 @@ export default function Admin() {
         }
       `}</style>
       <div>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+        >
+          ← ホームに戻る
+        </button>
 
         <div className="admin-header-row" style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
@@ -192,15 +199,9 @@ export default function Admin() {
           <div className="admin-btn-row" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button
               onClick={() => navigate('/admin/jobs')}
-              style={{ padding: '7px 14px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textPrimary, fontSize: 13, cursor: 'pointer' }}
-            >
-              発注案件一覧
-            </button>
-            <button
-              onClick={() => navigate('/admin/jobs/new')}
               style={{ padding: '7px 14px', backgroundColor: C.accent, border: 'none', borderRadius: 6, color: C.bg, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
-              案件を作成
+              発注案件一覧
             </button>
           </div>
         </div>

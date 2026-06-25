@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { CognitoUserPool } from 'amazon-cognito-identity-js'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
@@ -8,6 +8,7 @@ import { userPoolConfig } from '../lib/cognitoConfig'
 const userPool = new CognitoUserPool(userPoolConfig)
 
 export default function Apply() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const selectedJobId = searchParams.get('jobId') ?? ''
@@ -111,11 +112,28 @@ export default function Apply() {
     }
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/')
+  }
+
   if (done) {
     return (
       <MainLayout>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
           <div style={{ backgroundColor: '#18181B', border: '1px solid #27272A', borderRadius: 8, padding: '40px 32px', textAlign: 'center', maxWidth: 480, width: '100%' }}>
+            <div style={{ textAlign: 'left', marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={handleBack}
+                style={{ padding: '6px 10px', backgroundColor: 'transparent', border: '1px solid #27272A', borderRadius: 6, color: '#A1A1AA', fontSize: 12, cursor: 'pointer' }}
+              >
+                ← 戻る
+              </button>
+            </div>
             <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(16,185,129,0.12)', border: '1px solid #10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 18 }}>✓</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#FAFAFA', marginBottom: 8 }}>
               応募が完了しました
@@ -154,6 +172,13 @@ export default function Apply() {
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 28 }}>
+          <button
+            type="button"
+            onClick={handleBack}
+            style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+          >
+            ← 戻る
+          </button>
           <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Apply</p>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>
             案件応募
