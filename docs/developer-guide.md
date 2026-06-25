@@ -151,8 +151,8 @@ SAM はローカル開発専用です。
 ### 事前準備（初回デプロイ時のみ）
 
 1. Terraform State 用の S3 バケットと DynamoDB ロックテーブルを作成
-1. GitHub Actions 用に AWS OIDC ロールを作成
-1. GitHub Secrets を登録
+2. GitHub Actions 用に AWS OIDC ロールを作成
+3. GitHub Secrets を登録
 
 必要な GitHub Secrets:
 
@@ -168,3 +168,14 @@ SAM はローカル開発専用です。
     * prd マージ時に frontend を build し S3 へ同期
     * CloudFront invalidation を実行
     * Terraform output から frontend 用環境変数を注入
+
+---
+
+## 本番緊急停止からの復旧
+1. cognitoの復旧
+```bash
+aws cognito-idp update-user-pool \
+  --user-pool-id ap-northeast-1_0gKAAiZMq \
+  --admin-create-user-config AllowAdminCreateUserOnly=false
+```
+2. GitHub ActionsのTerraform Applyの手動実行

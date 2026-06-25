@@ -104,8 +104,8 @@ resource "aws_apigatewayv2_stage" "main" {
     logging_level            = "INFO"
 
     # スロットリング: 秒間10リクエスト、瞬間バースト10リクエストまで許可
-    throttling_burst_limit = 10
-    throttling_rate_limit  = 10
+    throttling_burst_limit = 20
+    throttling_rate_limit  = 20
   }
 
   tags = local.common_tags

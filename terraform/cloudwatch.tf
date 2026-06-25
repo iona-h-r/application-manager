@@ -1,16 +1,16 @@
 # ============================================================
 # CloudWatch Alarms for Emergency Shutdown
 #
-# CloudFront Requests > 20 / minute
-# API Gateway Count    > 20 / minute
+# CloudFront Requests > 60 / minute
+# API Gateway Count    > 60 / minute
 # ============================================================
 
 resource "aws_cloudwatch_metric_alarm" "cloudfront_requests" {
   alarm_name          = "${local.name_prefix}-cloudfront-requests-high"
-  alarm_description   = "CloudFront Requests exceeded 20 per minute."
+  alarm_description   = "CloudFront Requests exceeded 60 per minute."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
-  threshold           = 20
+  threshold           = 60
   metric_name         = "Requests"
   namespace           = "AWS/CloudFront"
   period              = 60
@@ -29,10 +29,10 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_requests" {
 
 resource "aws_cloudwatch_metric_alarm" "api_gateway_count" {
   alarm_name          = "${local.name_prefix}-api-gateway-count-high"
-  alarm_description   = "API Gateway Count exceeded 20 per minute."
+  alarm_description   = "API Gateway Count exceeded 60 per minute."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
-  threshold           = 20
+  threshold           = 60
   metric_name         = "Count"
   namespace           = "AWS/ApiGateway"
   period              = 60
