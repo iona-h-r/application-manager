@@ -1,0 +1,63 @@
+openapi: 3.0.1
+info:
+  title: Application Manager API
+  version: 2026-06-25 10:46:00UTC
+  description: 求人・応募管理システム API リファレンス
+servers:
+- url: https://hjbq7tiphc.execute-api.ap-northeast-1.amazonaws.com/
+tags:
+- name: Environment
+- name: Application
+- name: ManagedBy
+paths:
+  /admin/applications:
+    get:
+      responses:
+        default:
+          description: Default response for GET /admin/applications
+      security:
+      - application-manager-prod-cognito-jwt: []
+  /admin/applications/{applicationId}:
+    get:
+      responses:
+        default:
+          description: Default response for GET /admin/applications/{applicationId}
+      security:
+      - application-manager-prod-cognito-jwt: []
+    parameters:
+    - name: applicationId
+      in: path
+      description: Generated path parameter for applicationId
+      required: true
+      schema:
+        type: string
+  /admin/jobs:
+    get:
+      responses:
+        default:
+          description: Default response for GET /admin/jobs
+      security:
+      - application-manager-prod-cognito-jwt: []
+    post:
+      responses:
+        default:
+          description: Default response for POST /admin/jobs
+      security:
+      - application-manager-prod-cognito-jwt: []
+  /jobs:
+    get:
+      responses:
+        default:
+          description: Default response for GET /jobs
+  /applications:
+    post:
+      responses:
+        default:
+          description: Default response for POST /applications
+      security:
+      - application-manager-prod-cognito-jwt: []
+components:
+  securitySchemes:
+    application-manager-prod-cognito-jwt:
+      type: oauth2
+      flows: {}
