@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { CognitoUserPool } from 'amazon-cognito-identity-js'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
@@ -8,6 +8,7 @@ import { userPoolConfig } from '../lib/cognitoConfig'
 const userPool = new CognitoUserPool(userPoolConfig)
 
 export default function Apply() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const selectedJobId = searchParams.get('jobId') ?? ''
@@ -143,6 +144,13 @@ export default function Apply() {
   }
   const handleFocus = (e) => { e.target.style.borderColor = C.accent }
   const handleBlur = (e) => { e.target.style.borderColor = C.border }
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/')
+  }
 
   return (
     <MainLayout>
@@ -154,6 +162,13 @@ export default function Apply() {
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 28 }}>
+          <button
+            type="button"
+            onClick={handleBack}
+            style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+          >
+            ← 戻る
+          </button>
           <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Apply</p>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>
             案件応募

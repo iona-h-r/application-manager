@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CognitoUser, CognitoUserPool } from 'amazon-cognito-identity-js'
 import { userPoolConfig } from '../lib/cognitoConfig'
 
 const userPool = new CognitoUserPool(userPoolConfig)
 
 export default function Confirm() {
+  const navigate = useNavigate()
   // URLパラメータからメールアドレスと再送フラグを取得
   const params = new URLSearchParams(window.location.search)
   const email = params.get('email') ?? ''
@@ -51,10 +53,24 @@ export default function Confirm() {
   }
 
   const C = { bg: '#09090B', surface: '#18181B', border: '#27272A', textPrimary: '#FAFAFA', textSecondary: '#A1A1AA', accent: '#10B981' }
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/signup')
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
       <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 400 }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{ marginBottom: 16, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+        >
+          ← 戻る
+        </button>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 8, letterSpacing: '-0.02em' }}>メール認証</h2>
         <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 24 }}>
           <span style={{ color: C.textPrimary }}>{email}</span> に送信した認証コードを入力してください。

@@ -54,9 +54,24 @@ export default function Login() {
     boxSizing: 'border-box',
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/')
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
       <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 400 }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{ marginBottom: 16, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+        >
+          ← 戻る
+        </button>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 24, letterSpacing: '-0.02em' }}>ログイン</h2>
 
         {error && (

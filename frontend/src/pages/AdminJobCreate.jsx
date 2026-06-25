@@ -73,6 +73,13 @@ export default function AdminJobCreate() {
       `}</style>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <div style={{ marginBottom: 28 }}>
+          <button
+            type="button"
+            onClick={() => navigate('/admin/jobs')}
+            style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+          >
+            ← 案件一覧に戻る
+          </button>
           <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Admin</p>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>案件作成</h1>
           <p style={{ fontSize: 13, color: C.textSecondary }}>管理者向けの案件登録フォームです</p>

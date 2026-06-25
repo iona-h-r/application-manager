@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CognitoUser, CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { userPoolConfig } from '../lib/cognitoConfig'
 
 const userPool = new CognitoUserPool(userPoolConfig)
 
 export default function Signup() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [familyName, setFamilyName] = useState('')
@@ -67,10 +69,24 @@ export default function Signup() {
 
   const handleFocus = (e) => { e.target.style.borderColor = C.accent }
   const handleBlur = (e) => { e.target.style.borderColor = C.border }
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/login')
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', 'Noto Sans JP', sans-serif" }}>
       <div style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '32px 28px', width: '100%', maxWidth: 420 }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{ marginBottom: 16, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+        >
+          ← 戻る
+        </button>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 24, letterSpacing: '-0.02em' }}>アカウント作成</h2>
 
         {error && (

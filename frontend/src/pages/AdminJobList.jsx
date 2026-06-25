@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
 
@@ -21,6 +22,7 @@ function normalizeJobResults(data) {
 }
 
 export default function AdminJobList() {
+  const navigate = useNavigate()
   const [jobs, setJobs] = useState([])
   const [nextToken, setNextToken] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -122,15 +124,37 @@ export default function AdminJobList() {
     <MainLayout>
       <style>{`
         @media (max-width: 600px) {
+          .joblist-header-row { flex-direction: column !important; align-items: flex-start !important; }
+          .joblist-create-btn { width: 100% !important; margin-top: 10px !important; }
           .joblist-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
           .joblist-table-wrap table { min-width: 560px; }
         }
       `}</style>
       <div>
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Admin</p>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>発注案件一覧</h1>
-          <p style={{ fontSize: 13, color: C.textSecondary }}>自分が発注した案件の一覧を表示します</p>
+        <div style={{ marginBottom: 14 }}>
+          <button
+            type="button"
+            onClick={() => navigate('/admin')}
+            style={{ marginBottom: 12, padding: '6px 10px', backgroundColor: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, fontSize: 12, cursor: 'pointer' }}
+          >
+            ← 管理画面に戻る
+          </button>
+          <div className="joblist-header-row" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <p style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Admin</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em', marginBottom: 4 }}>発注案件一覧</h1>
+              <p style={{ fontSize: 13, color: C.textSecondary }}>自分が発注した案件の一覧を表示します</p>
+            </div>
+
+            <button
+              type="button"
+              className="joblist-create-btn"
+              onClick={() => navigate('/admin/jobs/new')}
+              style={{ height: 33, padding: '0 14px', display: 'inline-flex', alignItems: 'center', backgroundColor: C.accent, border: 'none', borderRadius: 6, color: C.bg, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              案件を作成
+            </button>
+          </div>
         </div>
 
         <div className="joblist-table-wrap" style={{ border: `1px solid ${C.border}`, borderRadius: 8, overflow: 'hidden' }}>
