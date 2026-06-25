@@ -20,19 +20,17 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="
-        px-4
-        py-2
-        rounded-lg
-        border
-        border-slate-300
-        bg-white
-        text-slate-700
-        text-sm
-        font-medium
-        hover:bg-slate-100
-        transition
-      "
+      style={{
+        padding: '6px 14px',
+        backgroundColor: 'transparent',
+        border: '1px solid #3F3F46',
+        borderRadius: 6,
+        color: '#FAFAFA',
+        fontSize: 13,
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FAFAFA' }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3F3F46'; e.currentTarget.style.color = '#FAFAFA' }}
     >
       ログアウト
     </button>
