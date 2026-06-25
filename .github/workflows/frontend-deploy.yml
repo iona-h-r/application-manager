@@ -12,7 +12,7 @@ on:
       - Terraform Apply
     types:
       - completed
-      
+
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,10 @@ env:
 
 jobs:
   deploy:
-    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     environment: prd
     runs-on: ubuntu-latest
 
