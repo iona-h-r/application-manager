@@ -98,22 +98,19 @@ export default function Home() {
 
     try {
       const tokens = { ...pageStartTokens }
-      let targetToken = tokens[targetPage]
+const targetToken = tokens[targetPage]
 
-      if (targetToken === undefined) {
-        let probePage = Math.max(...Object.keys(tokens).map((p) => Number(p)))
-        while (probePage < targetPage) {
-          const startToken = tokens[probePage]
-          const probeRes = await fetchJobs(startToken)
-          if (!probeRes.nextToken) {
-            throw new Error(`指定ページ(${targetPage})は存在しません`)
-          }
-          tokens[probePage + 1] = probeRes.nextToken
-          probePage += 1
-        }
-        targetToken = tokens[targetPage]
-      }
+const maxJumpablePage = Math.max(
+  ...Object.keys(tokens).map(Number)
+)
 
+if (!Object.prototype.hasOwnProperty.call(tokens, targetPage)) {
+  setError(
+    `現在ジャンプできるのは${maxJumpablePage}ページまでです。「次へ」で進んでください。`
+  )
+  setPageInput(String(currentPage))
+  return
+}
       const result = await fetchJobs(targetToken)
       setJobs(result.items)
       setNextToken(result.nextToken)
