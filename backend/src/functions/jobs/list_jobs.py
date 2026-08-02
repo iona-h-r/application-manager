@@ -67,22 +67,11 @@ def handler(event, context):
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
         response = table.query(**query_kwargs)
-    except Exception:
-        # GSI 未作成環境では scan にフォールバック
-        try:
-            scan_kwargs = {
-                "FilterExpression": Attr("status").eq("OPEN"),
-                "Limit": limit,
-            }
-            if start_key:
-                scan_kwargs["ExclusiveStartKey"] = start_key
-            response = table.scan(**scan_kwargs)
-        except Exception as exc:
+    except Exception as exc:
             print(f"ERROR list_jobs: {exc}")
             return create_response(500, {"message": "Failed to fetch jobs"})
 
     items = response.get("Items", [])
-    items.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
     out_token = _encode_next_token(response.get("LastEvaluatedKey"))
 
     body: dict = {"items": [_to_home_item(item) for item in items]}
