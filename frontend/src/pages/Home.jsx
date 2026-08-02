@@ -55,8 +55,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [submittedQuery, setSubmittedQuery] = useState('')
   const [hoveredJobId, setHoveredJobId] = useState(null)
+  const [submittedQuery, setSubmittedQuery] = useState('')
 
   useEffect(() => {
     const currentUser = userPool.getCurrentUser()
@@ -76,8 +76,11 @@ export default function Home() {
     })
   }, [])
 
-  const fetchJobs = async (token = null) => {
-    const params = { limit: PAGE_SIZE }
+const fetchJobs = async (token, q = '') => {
+const params = {
+  limit: PAGE_SIZE,
+  q,
+}
     if (token) {
       params.nextToken = token
     }
@@ -88,8 +91,8 @@ export default function Home() {
     }
   }
 
-  const loadPage = async (targetPage) => {
-    if (targetPage < 1) {
+const loadPage = async (targetPage, query = submittedQuery) => {
+      if (targetPage < 1) {
       return
     }
 
@@ -104,7 +107,7 @@ export default function Home() {
         let probePage = Math.max(...Object.keys(tokens).map((p) => Number(p)))
         while (probePage < targetPage) {
           const startToken = tokens[probePage]
-          const probeRes = await fetchJobs(startToken)
+const probeRes = await fetchJobs(startToken, query)
           if (!probeRes.nextToken) {
             throw new Error(`指定ページ(${targetPage})は存在しません`)
           }
@@ -114,7 +117,7 @@ export default function Home() {
         targetToken = tokens[targetPage]
       }
 
-      const result = await fetchJobs(targetToken)
+const result = await fetchJobs(targetToken, query)
       setJobs(result.items)
       setNextToken(result.nextToken)
       if (result.nextToken) {
@@ -161,20 +164,16 @@ export default function Home() {
     }
     loadPage(page)
   }
-const handleSearch = () => {
-  setSubmittedQuery(searchQuery)
-}
 
-const filteredJobs = jobs.filter((job) => {
-  if (!submittedQuery.trim()) return true
-  const q = submittedQuery.toLowerCase()
+  const handleSearch = () => {
+    const query = searchQuery.trim()
 
-  return (
-      job.title?.toLowerCase().includes(q) ||
-      job.company?.toLowerCase().includes(q) ||
-      job.type?.toLowerCase().includes(q)
-    )
-  })
+    setSubmittedQuery(query)
+    setPageStartTokens({ 1: null })
+    setCurrentPage(1)
+    setPageInput('1')
+    loadPage(1, query)
+  }
 
   return (
     <MainLayout>
@@ -209,11 +208,6 @@ const filteredJobs = jobs.filter((job) => {
             placeholder="職種・企業名・キーワードで検索"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-  if (e.key === 'Enter') {
-    handleSearch()
-  }
-}}
             style={{
               flex: 1,
               backgroundColor: colors.surface,
@@ -228,8 +222,8 @@ const filteredJobs = jobs.filter((job) => {
             onBlur={(e) => { e.target.style.borderColor = colors.border }}
           />
           <button
-          type="button"
-onClick={handleSearch}
+            type="button"
+            onClick={handleSearch}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -260,7 +254,7 @@ onClick={handleSearch}
         <p style={{ fontSize: 13, color: colors.textSecondary }}>
           {loading ? '読み込み中...' : (
             <>
-              <span style={{ color: colors.accent, fontWeight: 600 }}>{filteredJobs.length}</span>
+              <span style={{ color: colors.accent, fontWeight: 600 }}>{jobs.length}</span>
               {' '}件の案件
             </>
           )}
@@ -278,7 +272,7 @@ onClick={handleSearch}
 
       {/* Job list */}
       <div style={{ border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
-        {filteredJobs.map((job) => (
+        {jobs.map((job) => (
           <div
             key={job.id}
             onMouseEnter={() => setHoveredJobId(job.id)}
@@ -372,7 +366,7 @@ onClick={handleSearch}
           </div>
         ))}
 
-        {!loading && filteredJobs.length === 0 && !error && (
+        {!loading && jobs.length === 0 && !error && (
           <div style={{ padding: '32px 20px', textAlign: 'center', color: colors.textSecondary, fontSize: 13, backgroundColor: colors.surface }}>
             条件に一致する案件はありません
           </div>
