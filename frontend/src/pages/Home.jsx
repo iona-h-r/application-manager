@@ -55,6 +55,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [submittedQuery, setSubmittedQuery] = useState('')
   const [hoveredJobId, setHoveredJobId] = useState(null)
 
   useEffect(() => {
@@ -160,11 +161,15 @@ export default function Home() {
     }
     loadPage(page)
   }
+const handleSearch = () => {
+  setSubmittedQuery(searchQuery)
+}
 
-  const filteredJobs = jobs.filter((job) => {
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    return (
+const filteredJobs = jobs.filter((job) => {
+  if (!submittedQuery.trim()) return true
+  const q = submittedQuery.toLowerCase()
+
+  return (
       job.title?.toLowerCase().includes(q) ||
       job.company?.toLowerCase().includes(q) ||
       job.type?.toLowerCase().includes(q)
@@ -204,6 +209,11 @@ export default function Home() {
             placeholder="職種・企業名・キーワードで検索"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+  if (e.key === 'Enter') {
+    handleSearch()
+  }
+}}
             style={{
               flex: 1,
               backgroundColor: colors.surface,
@@ -218,6 +228,8 @@ export default function Home() {
             onBlur={(e) => { e.target.style.borderColor = colors.border }}
           />
           <button
+          type="button"
+onClick={handleSearch}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
