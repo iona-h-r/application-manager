@@ -78,9 +78,9 @@ def handler(event, context):
 
                 if q:
                     query_kwargs["FilterExpression"] = (
-                        Attr("title").contains(q)
+                        Attr("jobTitle").contains(q)
                         | Attr("company").contains(q)
-                        | Attr("type").contains(q)
+                        | Attr("employmentType").contains(q)
                     )
 
                 if last_key:
