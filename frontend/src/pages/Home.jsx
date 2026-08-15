@@ -123,6 +123,7 @@ export default function Home() {
       setPageStartTokens(tokens)
       setCurrentPage(targetPage)
       setPageInput(String(targetPage))
+      sessionStorage.setItem('homeCurrentPage', String(targetPage))
     } catch (err) {
       setJobs([])
       setError(
@@ -136,9 +137,10 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    loadPage(1)
-  }, [])
+useEffect(() => {
+  const savedPage = Number(sessionStorage.getItem('homeCurrentPage')) || 1
+  loadPage(savedPage)
+}, [])
 
   const handleNext = () => {
     if (!nextToken || loading) {
