@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout'
 import { createApiClient } from '../lib/api'
+import { resolvePageToken } from '../utils/pagination'
 
 const PAGE_SIZE = 10
 
@@ -54,26 +55,23 @@ export default function AdminJobList() {
 
 try {
   const tokens = { ...pageStartTokens }
-  const targetToken = tokens[targetPage]
 
-  const maxJumpablePage = Math.max(
-    ...Object.keys(tokens).map(Number)
-  )
+  const { token: resolvedToken, tokens: resolvedTokens } =
+  await resolvePageToken({
+    tokens,
+    targetPage,
+    fetchPage: fetchJobs,
+  })
 
-  if (!Object.prototype.hasOwnProperty.call(tokens, targetPage)) {
-    setError(
-      `現在ジャンプできるのは${maxJumpablePage}ページまでです。「次へ」で進んでください。`
-    )
-    setPageInput(String(currentPage))
-    return
-  }
-      const result = await fetchJobs(targetToken)
+  const result = await fetchJobs(resolvedToken)
       setJobs(result.items)
       setNextToken(result.nextToken)
-      if (result.nextToken) {
-        tokens[targetPage + 1] = result.nextToken
-      }
-      setPageStartTokens(tokens)
+  if (result.nextToken) {
+    resolvedTokens[targetPage + 1] = result.nextToken
+  }
+
+  setPageStartTokens(resolvedTokens)
+
       setCurrentPage(targetPage)
       setPageInput(String(targetPage))
     } catch (err) {
