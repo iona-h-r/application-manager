@@ -1,3 +1,22 @@
+/**
+ * 指定ページを取得するために必要なページトークンを解決する関数。
+ *
+ * 引数:
+ * - tokens: 各ページの開始トークンを持つオブジェクト
+ *   例: { 1: null, 2: "xxx", 3: "yyy" }
+ * - targetPage: 移動したいページ番号（number）
+ * - fetchPage: トークンを使ってページ情報を取得する関数（function）
+ * - maxAdvance: キャッシュ済みページから一度に探索できる最大ページ数（number）
+ *
+ * 処理:
+ * - すでに対象ページのトークンがあればそのまま返す
+ * - 未取得のページなら fetchPage を順番に呼び、必要なトークンを補完する
+ * - maxAdvance を超えるページジャンプはエラーにする
+ *
+ * 戻り値:
+ * - token: 対象ページを取得するためのトークン（string または null）
+ * - tokens: 探索後のページトークン一覧（object）
+ */
 export async function resolvePageToken({
   tokens,
   targetPage,

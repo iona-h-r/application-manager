@@ -98,47 +98,23 @@ export default function Home() {
     setError(null)
 
     try {
-      const tokens = { ...pageStartTokens }
+        const { token: resolvedToken, tokens: resolvedTokens } =
+        await resolvePageToken({
+          tokens: pageStartTokens,
+          targetPage,
+          fetchPage: fetchJobs,
+        })
 
-const maxJumpablePage = Math.max(
-  ...Object.keys(tokens).map(Number)
-)
+      const result = await fetchJobs(resolvedToken)
 
-if (targetPage > maxJumpablePage + 5) {
-setError(
-  `一度にジャンプできるのは${maxJumpablePage + 5}ページまでです。`
-)
-  setPageInput(String(currentPage))
-  return
-}
-
-let resolvedToken = tokens[targetPage]
-
-if (!Object.prototype.hasOwnProperty.call(tokens, targetPage)) {
-  let probePage = maxJumpablePage
-
-  while (probePage < targetPage) {
-    const startToken = tokens[probePage]
-    const probeRes = await fetchJobs(startToken)
-
-    if (!probeRes.nextToken) {
-      throw new Error(`指定ページ${targetPage}は存在しません`)
-    }
-
-    tokens[probePage + 1] = probeRes.nextToken
-    probePage += 1
-  }
-
-  resolvedToken = tokens[targetPage]
-}
-
-     const result = await fetchJobs(resolvedToken)
       setJobs(result.items)
+      setNextToken(result.nextToken)
 
       if (result.nextToken) {
-        tokens[targetPage + 1] = result.nextToken
+        resolvedTokens[targetPage + 1] = result.nextToken
       }
-      setPageStartTokens(tokens)
+
+      setPageStartTokens(resolvedTokens) 
       setCurrentPage(targetPage)
       setPageInput(String(targetPage))
     } catch (err) {

@@ -53,12 +53,11 @@ export default function AdminJobList() {
     setLoading(true)
     setError(null)
 
-try {
-  const tokens = { ...pageStartTokens }
+try {                                                                                                                                                                                                                                                                                                                                                                                                       
 
   const { token: resolvedToken, tokens: resolvedTokens } =
   await resolvePageToken({
-    tokens,
+    tokens: pageStartTokens,
     targetPage,
     fetchPage: fetchJobs,
   })
