@@ -91,8 +91,12 @@ const params = {
     }
   }
 
-const loadPage = async (targetPage, query = submittedQuery) => {
-      if (targetPage < 1) {
+const loadPage = async (
+  targetPage,
+  query = submittedQuery,
+  initialTokens = pageStartTokens
+) => {
+  if (targetPage < 1) {
       return
     }
 
@@ -100,8 +104,8 @@ const loadPage = async (targetPage, query = submittedQuery) => {
     setError(null)
 
     try {
-      const tokens = { ...pageStartTokens }
-      let targetToken = tokens[targetPage]
+const tokens = { ...initialTokens }      
+let targetToken = tokens[targetPage]
 
       if (targetToken === undefined) {
         let probePage = Math.max(...Object.keys(tokens).map((p) => Number(p)))
@@ -172,7 +176,7 @@ const result = await fetchJobs(targetToken, query)
     setPageStartTokens({ 1: null })
     setCurrentPage(1)
     setPageInput('1')
-    loadPage(1, query)
+    loadPage(1, query, { 1: null })
   }
 
   return (

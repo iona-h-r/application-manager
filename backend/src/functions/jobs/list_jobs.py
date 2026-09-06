@@ -47,12 +47,8 @@ def _to_home_item(item: dict) -> dict:
 
 def handler(event, context):
     params = event.get("queryStringParameters") or {}
-
     try:
-        limit = max(
-            1,
-            min(int(params.get("limit", DEFAULT_LIMIT)), MAX_LIMIT),
-        )
+        limit = max(1, min(int(params.get("limit", DEFAULT_LIMIT)), MAX_LIMIT))
     except (ValueError, TypeError):
         limit = DEFAULT_LIMIT
 
@@ -60,7 +56,6 @@ def handler(event, context):
 
     next_token = params.get("nextToken") or None
     start_key = _decode_next_token(next_token)
-
     if next_token and start_key is None:
         return create_response(400, {"message": "Invalid nextToken"})
 
@@ -69,34 +64,34 @@ def handler(event, context):
         last_key = start_key
 
         while len(items) < limit:
-                query_kwargs = {
-                    "IndexName": "status-createdAt-index",
-                    "KeyConditionExpression": Key("status").eq("OPEN"),
-                    "ScanIndexForward": False,
-                    "Limit": limit - len(items),
-                }
+            query_kwargs = {
+                "IndexName": "status-createdAt-index",
+                "KeyConditionExpression": Key("status").eq("OPEN"),
+                "ScanIndexForward": False,
+                "Limit": limit - len(items),
+            }
 
-                if q:
-                    query_kwargs["FilterExpression"] = (
-                        Attr("jobTitle").contains(q)
-                        | Attr("company").contains(q)
-                        | Attr("employmentType").contains(q)
-                    )
+            if q:
+                query_kwargs["FilterExpression"] = (
+                    Attr("jobTitle").contains(q)
+                    | Attr("company").contains(q)
+                    | Attr("employmentType").contains(q)
+                )
 
-                if last_key:
-                    query_kwargs["ExclusiveStartKey"] = last_key
+            if last_key:
+                query_kwargs["ExclusiveStartKey"] = last_key
 
-                response = table.query(**query_kwargs)
-                items.extend(response.get("Items", []))
-                last_key = response.get("LastEvaluatedKey")
+            response = table.query(**query_kwargs)
+            items.extend(response.get("Items", []))
+            last_key = response.get("LastEvaluatedKey")
 
-                if not last_key:
-                    break
+            if not last_key:
+                break
 
     except Exception as exc:
         print(f"ERROR list_jobs: {exc}")
         return create_response(500, {"message": "Failed to fetch jobs"})
-            
+
     items.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
     out_token = _encode_next_token(last_key)
 
