@@ -4,6 +4,7 @@ import { CognitoUserPool } from 'amazon-cognito-identity-js'
 import MainLayout from '../layouts/MainLayout'
 import { publicApi } from '../lib/api'
 import { userPoolConfig } from '../lib/cognitoConfig'
+import { resolvePageToken } from '../utils/pagination'
 
 const userPool = new CognitoUserPool(userPoolConfig)
 const PAGE_SIZE = 10
@@ -97,32 +98,26 @@ export default function Home() {
     setError(null)
 
     try {
-      const tokens = { ...pageStartTokens }
-      let targetToken = tokens[targetPage]
+        const { token: resolvedToken, tokens: resolvedTokens } =
+        await resolvePageToken({
+          tokens: pageStartTokens,
+          targetPage,
+          fetchPage: fetchJobs,
+        })
 
-      if (targetToken === undefined) {
-        let probePage = Math.max(...Object.keys(tokens).map((p) => Number(p)))
-        while (probePage < targetPage) {
-          const startToken = tokens[probePage]
-          const probeRes = await fetchJobs(startToken)
-          if (!probeRes.nextToken) {
-            throw new Error(`指定ページ(${targetPage})は存在しません`)
-          }
-          tokens[probePage + 1] = probeRes.nextToken
-          probePage += 1
-        }
-        targetToken = tokens[targetPage]
-      }
+      const result = await fetchJobs(resolvedToken)
 
-      const result = await fetchJobs(targetToken)
       setJobs(result.items)
       setNextToken(result.nextToken)
+
       if (result.nextToken) {
-        tokens[targetPage + 1] = result.nextToken
+        resolvedTokens[targetPage + 1] = result.nextToken
       }
-      setPageStartTokens(tokens)
+
+      setPageStartTokens(resolvedTokens) 
       setCurrentPage(targetPage)
       setPageInput(String(targetPage))
+      sessionStorage.setItem('homeCurrentPage', String(targetPage))
     } catch (err) {
       setJobs([])
       setError(
@@ -136,9 +131,10 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    loadPage(1)
-  }, [])
+useEffect(() => {
+  const savedPage = Number(sessionStorage.getItem('homeCurrentPage')) || 1
+  loadPage(savedPage)
+}, [])
 
   const handleNext = () => {
     if (!nextToken || loading) {
