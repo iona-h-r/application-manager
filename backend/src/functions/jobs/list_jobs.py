@@ -63,23 +63,27 @@ def handler(event, context):
         items = []
         last_key = start_key
 
-        while len(items) < limit:
-            query_kwargs = {
-                "IndexName": "status-createdAt-index",
-                "KeyConditionExpression": Key("status").eq("OPEN"),
-                "ScanIndexForward": False,
-                "Limit": limit - len(items),
-            }
+        query_kwargs = {
+            "IndexName": "status-createdAt-index",
+            "KeyConditionExpression": Key("status").eq("OPEN"),
+            "ScanIndexForward": False,
+            
+        }
 
-            if q:
-                query_kwargs["FilterExpression"] = (
-                    Attr("jobTitle").contains(q)
-                    | Attr("company").contains(q)
-                    | Attr("employmentType").contains(q)
-                )
+        if q:
+            query_kwargs["FilterExpression"] = (
+                Attr("jobTitle").contains(q)
+                | Attr("company").contains(q)
+                | Attr("employmentType").contains(q)
+            )
+
+        while len(items) < limit:
+            query_kwargs["Limit"] = limit - len(items)
 
             if last_key:
                 query_kwargs["ExclusiveStartKey"] = last_key
+            else:
+                query_kwargs.pop("ExclusiveStartKey", None)
 
             response = table.query(**query_kwargs)
             items.extend(response.get("Items", []))
