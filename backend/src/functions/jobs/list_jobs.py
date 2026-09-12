@@ -52,27 +52,51 @@ def handler(event, context):
     except (ValueError, TypeError):
         limit = DEFAULT_LIMIT
 
+    q = (params.get("q") or "").strip()
+
     next_token = params.get("nextToken") or None
     start_key = _decode_next_token(next_token)
     if next_token and start_key is None:
         return create_response(400, {"message": "Invalid nextToken"})
 
     try:
+        items = []
+        last_key = start_key
+
         query_kwargs = {
             "IndexName": "status-createdAt-index",
             "KeyConditionExpression": Key("status").eq("OPEN"),
             "ScanIndexForward": False,
-            "Limit": limit,
+            
         }
-        if start_key:
-            query_kwargs["ExclusiveStartKey"] = start_key
-        response = table.query(**query_kwargs)
-    except Exception as exc:
-            print(f"ERROR list_jobs: {exc}")
-            return create_response(500, {"message": "Failed to fetch jobs"})
 
-    items = response.get("Items", [])
-    out_token = _encode_next_token(response.get("LastEvaluatedKey"))
+        if q:
+            query_kwargs["FilterExpression"] = (
+                Attr("jobTitle").contains(q)
+                | Attr("company").contains(q)
+                | Attr("employmentType").contains(q)
+            )
+
+        while len(items) < limit:
+            query_kwargs["Limit"] = limit - len(items)
+
+            if last_key:
+                query_kwargs["ExclusiveStartKey"] = last_key
+            else:
+                query_kwargs.pop("ExclusiveStartKey", None)
+
+            response = table.query(**query_kwargs)
+            items.extend(response.get("Items", []))
+            last_key = response.get("LastEvaluatedKey")
+
+            if not last_key:
+                break
+
+    except Exception as exc:
+        print(f"ERROR list_jobs: {exc}")
+        return create_response(500, {"message": "Failed to fetch jobs"})
+
+    out_token = _encode_next_token(last_key)
 
     body: dict = {"items": [_to_home_item(item) for item in items]}
     if out_token:
